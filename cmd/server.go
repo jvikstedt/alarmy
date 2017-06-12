@@ -19,7 +19,13 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		boltStore := alarmy.NewBoltStore()
+		boltStore, err := alarmy.NewBoltStore("mydb.db")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		defer boltStore.Close()
+
 		api := alarmy.NewApi(boltStore)
 		if err := alarmy.StartServer(":8080", api); err != nil {
 			fmt.Println(err)
