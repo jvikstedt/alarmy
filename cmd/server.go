@@ -26,6 +26,12 @@ to quickly create a Cobra application.`,
 		}
 		defer boltStore.Close()
 
+		err = boltStore.CreateBucketsIfNotExists()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		api := alarmy.NewApi(boltStore)
 		if err := alarmy.StartServer(":8080", api); err != nil {
 			fmt.Println(err)
