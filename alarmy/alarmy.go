@@ -4,11 +4,15 @@ import (
 	"net/http"
 )
 
-func StartServer(addr string) error {
-	router, err := setupRouter()
+type Router interface {
+	Setup() (http.Handler, error)
+}
+
+func StartServer(addr string, router Router) error {
+	handler, err := router.Setup()
 	if err != nil {
 		return err
 	}
 
-	return http.ListenAndServe(addr, router)
+	return http.ListenAndServe(addr, handler)
 }
