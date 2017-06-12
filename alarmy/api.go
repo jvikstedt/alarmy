@@ -5,13 +5,17 @@ import (
 
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/middleware"
+	"github.com/pressly/chi/render"
 )
 
 type Api struct {
+	store Store
 }
 
-func NewApi() *Api {
-	return &Api{}
+func NewApi(store Store) *Api {
+	return &Api{
+		store: store,
+	}
 }
 
 func (a *Api) Setup() (http.Handler, error) {
@@ -32,5 +36,10 @@ func (a *Api) Setup() (http.Handler, error) {
 }
 
 func (a *Api) GetProjects(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("hi"))
+	projects, err := a.store.Projects()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	render.JSON(w, r, projects)
 }

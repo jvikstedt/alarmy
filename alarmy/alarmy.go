@@ -2,17 +2,20 @@ package alarmy
 
 import (
 	"net/http"
+	"time"
 )
+
+type Store interface {
+	Projects() ([]Project, error)
+}
 
 type Router interface {
 	Setup() (http.Handler, error)
 }
 
-func StartServer(addr string, router Router) error {
-	handler, err := router.Setup()
-	if err != nil {
-		return err
-	}
-
-	return http.ListenAndServe(addr, handler)
+type Project struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
