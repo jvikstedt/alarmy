@@ -2,9 +2,10 @@ package alarmy
 
 import (
 	"encoding/json"
-	"fmt"
+	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/jvikstedt/alarmii/util"
 )
 
 var bucketProjects = []byte("projects")
@@ -33,7 +34,7 @@ func (s *BoltStore) CreateBucketsIfNotExists() error {
 	})
 }
 
-func (s *BoltStore) Projects() ([]Project, error) {
+func (s *BoltStore) ProjectAll() ([]Project, error) {
 	projects := []Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketProjects)
@@ -51,6 +52,26 @@ func (s *BoltStore) Projects() ([]Project, error) {
 		return nil
 	})
 	return projects, err
+}
+
+func (s *BoltStore) ProjectCreate(project Project) (Project, error) {
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketProjects)
+
+		id, err := b.NextSequence()
+		if err != nil {
+			return err
+		}
+		project.ID = int(id)
+		project.CreatedAt = time.Now()
+		project.UpdatedAt = time.Now()
+		encoded, err := json.Marshal(project)
+		if err != nil {
+			return err
+		}
+		return b.Put(util.Itob(project.ID), encoded)
+	})
+	return project, err
 }
 
 func (s *BoltStore) Close() error {
