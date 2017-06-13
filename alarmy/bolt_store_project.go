@@ -11,7 +11,7 @@ import (
 func (s *BoltStore) ProjectAll() ([]Project, error) {
 	projects := []Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketProjects)
+		b := tx.Bucket(BucketKeyProjects)
 
 		c := b.Cursor()
 
@@ -30,7 +30,7 @@ func (s *BoltStore) ProjectAll() ([]Project, error) {
 
 func (s *BoltStore) ProjectCreate(project Project) (Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketProjects)
+		b := tx.Bucket(BucketKeyProjects)
 
 		id, err := b.NextSequence()
 		if err != nil {

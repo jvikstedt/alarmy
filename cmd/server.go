@@ -26,7 +26,7 @@ to quickly create a Cobra application.`,
 		}
 		defer boltStore.Close()
 
-		err = boltStore.CreateBucketsIfNotExists()
+		err = boltStore.EnsureBucketsExist()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
