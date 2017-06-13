@@ -12,6 +12,11 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
+	if projects == nil {
+		projects = []Project{}
+	}
+
 	render.JSON(w, r, projects)
 }
 
