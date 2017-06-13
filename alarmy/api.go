@@ -5,7 +5,6 @@ import (
 
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/middleware"
-	"github.com/pressly/chi/render"
 )
 
 type Api struct {
@@ -34,30 +33,4 @@ func (a *Api) Setup() (http.Handler, error) {
 	})
 
 	return r, nil
-}
-
-func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
-	projects, err := a.store.ProjectAll()
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-	render.JSON(w, r, projects)
-}
-
-func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
-	data := &ProjectRequest{}
-	if err := render.Bind(r, data); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	project, err := a.store.ProjectCreate(data.Project)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, project)
 }
