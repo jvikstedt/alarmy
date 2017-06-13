@@ -23,11 +23,11 @@ func NewBoltStore(filename string) (*BoltStore, error) {
 	}, nil
 }
 
-func (s *BoltStore) EnsureBucketsExist() error {
+func (s *BoltStore) EnsureTablesExist() error {
 	return s.CreateBuckets(Buckets...)
 }
 
-func (s *BoltStore) RecreateAllBuckets() error {
+func (s *BoltStore) RecreateAllTables() error {
 	return s.RecreateBuckets(Buckets...)
 }
 
