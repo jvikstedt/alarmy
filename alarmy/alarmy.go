@@ -2,7 +2,6 @@ package alarmy
 
 import (
 	"net/http"
-	"time"
 )
 
 type Store interface {
