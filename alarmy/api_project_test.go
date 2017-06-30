@@ -1,6 +1,7 @@
 package alarmy_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -12,6 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Test data
+var testProjects = []alarmy.Project{
+	alarmy.Project{Name: "Golang"},
+	alarmy.Project{Name: "Ruby"},
+	alarmy.Project{Name: "Javascript"},
+}
+
 // TestProjectAll tests GET /projects
 func TestProjectAll(t *testing.T) {
 	// Reset tables
@@ -21,13 +29,6 @@ func TestProjectAll(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/projects", nil)
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.ProjectAll)
-
-	// Test data
-	testProjects := []alarmy.Project{
-		alarmy.Project{Name: "Golang"},
-		alarmy.Project{Name: "Ruby"},
-		alarmy.Project{Name: "Javascript"},
-	}
 
 	for i := 0; i < len(testProjects)+1; i++ {
 		// Skip first creation to test without projects
@@ -48,6 +49,53 @@ func TestProjectAll(t *testing.T) {
 			assert.Equal(t, testProjects[i].Name, p.Name, "project name")
 		}
 	}
+}
+
+func TestProjectCreate(t *testing.T) {
+	// Reset tables
+	store.RecreateAllTables()
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(api.ProjectCreate)
+
+	for i, p := range testProjects {
+		b := new(bytes.Buffer)
+		json.NewEncoder(b).Encode(p)
+
+		req, _ := http.NewRequest("POST", "/projects", b)
+
+		// Make a request
+		handler.ServeHTTP(rr, req)
+
+		// Read project from body
+		project := readProject(t, rr.Body)
+
+		assert.Equal(t, http.StatusCreated, rr.Code, "status code")
+		assert.Equal(t, p.Name, project.Name, "project name")
+		assert.Equal(t, i+1, project.ID, "project id")
+	}
+
+	// Make sure data actually went to the database
+	projects, _ := store.ProjectAll()
+	assert.Equal(t, len(testProjects), len(projects), "projects length")
+	for i, p := range projects {
+		assert.Equal(t, testProjects[i].Name, p.Name, "project name")
+	}
+}
+
+func readProject(t *testing.T, r io.Reader) alarmy.Project {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		t.Errorf("Error reading from body %e", err)
+	}
+
+	project := alarmy.Project{}
+	err = json.Unmarshal(data, &project)
+	if err != nil {
+		t.Errorf("JSON unmarshalling error %e", err)
+	}
+
+	return project
 }
 
 func readProjects(t *testing.T, r io.Reader) []alarmy.Project {
