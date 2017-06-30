@@ -13,10 +13,6 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if projects == nil {
-		projects = []Project{}
-	}
-
 	render.JSON(w, r, projects)
 }
 
