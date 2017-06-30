@@ -22,7 +22,7 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	data := &ProjectRequest{}
-	if err := render.Bind(r, data); err != nil {
+	if err := render.Bind(r.Body, data); err != nil {
 		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 		return
 	}
