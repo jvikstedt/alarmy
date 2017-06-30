@@ -23,10 +23,6 @@ func setup() {
 	if err != nil {
 		panic(err)
 	}
-	err = store.EnsureTablesExist()
-	if err != nil {
-		panic(err)
-	}
 
 	api = alarmy.NewApi(store)
 }

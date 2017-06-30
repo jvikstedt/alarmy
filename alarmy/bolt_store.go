@@ -18,9 +18,17 @@ func NewBoltStore(filename string) (*BoltStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &BoltStore{
+
+	store := &BoltStore{
 		db: db,
-	}, nil
+	}
+
+	err = store.EnsureTablesExist()
+	if err != nil {
+		return nil, err
+	}
+
+	return store, nil
 }
 
 func (s *BoltStore) EnsureTablesExist() error {

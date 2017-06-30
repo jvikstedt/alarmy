@@ -21,16 +21,9 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		boltStore, err := alarmy.NewBoltStore("alarmy_dev.db")
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			panic(err)
 		}
 		defer boltStore.Close()
-
-		err = boltStore.EnsureTablesExist()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
 
 		api := alarmy.NewApi(boltStore)
 		if err := alarmy.StartServer(":8080", api); err != nil {
