@@ -9,7 +9,17 @@ import (
 	"github.com/jvikstedt/alarmii/util"
 )
 
-func (s *BoltStore) ProjectAll() ([]Project, error) {
+type BoltProjectStore struct {
+	*BoltStore
+}
+
+func NewBoltProjectStore(bs *BoltStore) *BoltProjectStore {
+	return &BoltProjectStore{
+		BoltStore: bs,
+	}
+}
+
+func (s *BoltProjectStore) ProjectAll() ([]Project, error) {
 	projects := []Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
@@ -29,7 +39,7 @@ func (s *BoltStore) ProjectAll() ([]Project, error) {
 	return projects, err
 }
 
-func (s *BoltStore) ProjectCreate(project Project) (Project, error) {
+func (s *BoltProjectStore) ProjectCreate(project Project) (Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -49,7 +59,7 @@ func (s *BoltStore) ProjectCreate(project Project) (Project, error) {
 	return project, err
 }
 
-func (s *BoltStore) ProjectUpdate(project Project) (Project, error) {
+func (s *BoltProjectStore) ProjectUpdate(project Project) (Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -67,7 +77,7 @@ func (s *BoltStore) ProjectUpdate(project Project) (Project, error) {
 	return project, err
 }
 
-func (s *BoltStore) ProjectDestroy(id int) error {
+func (s *BoltProjectStore) ProjectDestroy(id int) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -75,7 +85,7 @@ func (s *BoltStore) ProjectDestroy(id int) error {
 	})
 }
 
-func (s *BoltStore) ProjectGetOne(id int) (Project, error) {
+func (s *BoltProjectStore) ProjectGetOne(id int) (Project, error) {
 	project := Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
@@ -84,4 +94,8 @@ func (s *BoltStore) ProjectGetOne(id int) (Project, error) {
 		return json.Unmarshal(data, &project)
 	})
 	return project, err
+}
+
+func (s *BoltProjectStore) ProjectRemoveAll() error {
+	return s.RecreateBuckets(BucketKeyProjects)
 }

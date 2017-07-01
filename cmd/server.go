@@ -25,7 +25,11 @@ to quickly create a Cobra application.`,
 		}
 		defer boltStore.Close()
 
-		api := alarmy.NewApi(boltStore)
+		store := alarmy.Store{
+			ProjectStore: alarmy.NewBoltProjectStore(boltStore),
+		}
+
+		api := alarmy.NewApi(store)
 		if err := alarmy.StartServer(":8080", api); err != nil {
 			fmt.Println(err)
 			os.Exit(1)

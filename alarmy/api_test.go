@@ -9,19 +9,24 @@ import (
 
 var store alarmy.Store
 var api *alarmy.Api
+var boltStore *alarmy.BoltStore
 
 func TestMain(m *testing.M) {
 	setup()
 	retCode := m.Run()
-	store.Close()
+	boltStore.Close()
 	os.Exit(retCode)
 }
 
 func setup() {
 	var err error
-	store, err = alarmy.NewBoltStore("alarmy_test.db")
+	boltStore, err = alarmy.NewBoltStore("alarmy_test.db")
 	if err != nil {
 		panic(err)
+	}
+
+	store = alarmy.Store{
+		ProjectStore: alarmy.NewBoltProjectStore(boltStore),
 	}
 
 	api = alarmy.NewApi(store)

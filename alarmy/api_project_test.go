@@ -22,8 +22,8 @@ var testProjects = []alarmy.Project{
 
 // TestProjectAll tests GET /projects
 func TestProjectAll(t *testing.T) {
-	// Reset tables
-	store.RecreateAllTables()
+	// Reset table
+	store.ProjectRemoveAll()
 
 	// Setup request
 	req, _ := http.NewRequest("GET", "/projects", nil)
@@ -52,8 +52,8 @@ func TestProjectAll(t *testing.T) {
 }
 
 func TestProjectCreate(t *testing.T) {
-	// Reset tables
-	store.RecreateAllTables()
+	// Reset table
+	store.ProjectRemoveAll()
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.ProjectCreate)
