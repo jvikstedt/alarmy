@@ -1,4 +1,4 @@
-package alarmy
+package store
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/jvikstedt/alarmii/util"
+	"github.com/jvikstedt/alarmy/model"
 )
 
 type BoltProjectStore struct {
@@ -19,15 +20,15 @@ func NewBoltProjectStore(bs *BoltStore) *BoltProjectStore {
 	}
 }
 
-func (s *BoltProjectStore) ProjectAll() ([]Project, error) {
-	projects := []Project{}
+func (s *BoltProjectStore) ProjectAll() ([]model.Project, error) {
+	projects := []model.Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			project := Project{}
+			project := model.Project{}
 			err := json.Unmarshal(v, &project)
 			if err != nil {
 				return err
@@ -39,7 +40,7 @@ func (s *BoltProjectStore) ProjectAll() ([]Project, error) {
 	return projects, err
 }
 
-func (s *BoltProjectStore) ProjectCreate(project Project) (Project, error) {
+func (s *BoltProjectStore) ProjectCreate(project model.Project) (model.Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -59,7 +60,7 @@ func (s *BoltProjectStore) ProjectCreate(project Project) (Project, error) {
 	return project, err
 }
 
-func (s *BoltProjectStore) ProjectUpdate(project Project) (Project, error) {
+func (s *BoltProjectStore) ProjectUpdate(project model.Project) (model.Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -85,8 +86,8 @@ func (s *BoltProjectStore) ProjectDestroy(id int) error {
 	})
 }
 
-func (s *BoltProjectStore) ProjectGetOne(id int) (Project, error) {
-	project := Project{}
+func (s *BoltProjectStore) ProjectGetOne(id int) (model.Project, error) {
+	project := model.Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 

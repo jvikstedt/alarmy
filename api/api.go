@@ -1,23 +1,24 @@
-package alarmy
+package api
 
 import (
 	"net/http"
 
+	"github.com/jvikstedt/alarmy/store"
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/middleware"
 )
 
 type Api struct {
-	store Store
+	store store.Store
 }
 
-func NewApi(store Store) *Api {
+func NewApi(store store.Store) *Api {
 	return &Api{
 		store: store,
 	}
 }
 
-func (a *Api) Setup() (http.Handler, error) {
+func (a *Api) Handler() (http.Handler, error) {
 	r := chi.NewRouter()
 
 	// Middleware

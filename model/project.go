@@ -1,4 +1,4 @@
-package alarmy
+package model
 
 import (
 	"net/http"

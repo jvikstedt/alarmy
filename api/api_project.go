@@ -1,8 +1,9 @@
-package alarmy
+package api
 
 import (
 	"net/http"
 
+	"github.com/jvikstedt/alarmy/model"
 	"github.com/pressly/chi/render"
 )
 
@@ -17,7 +18,7 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
-	data := &ProjectRequest{}
+	data := &model.ProjectRequest{}
 	if err := render.Bind(r.Body, data); err != nil {
 		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 		return
