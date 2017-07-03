@@ -10,6 +10,15 @@ type MockStore struct {
 				Error    error
 			}
 		}
+		ProjectCreate struct {
+			Receives struct {
+				Project model.Project
+			}
+			Returns struct {
+				Project model.Project
+				Error   error
+			}
+		}
 	}
 }
 
@@ -18,7 +27,8 @@ func (s *MockStore) ProjectAll() ([]model.Project, error) {
 }
 
 func (s *MockStore) ProjectCreate(project model.Project) (model.Project, error) {
-	return model.Project{}, nil
+	s.Project.ProjectCreate.Receives.Project = project
+	return s.Project.ProjectCreate.Returns.Project, s.Project.ProjectCreate.Returns.Error
 }
 
 func (s *MockStore) ProjectUpdate(project model.Project) (model.Project, error) {
