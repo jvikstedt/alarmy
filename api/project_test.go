@@ -77,6 +77,7 @@ func TestProjectCreate(t *testing.T) {
 	assert.Equal(t, testProject.ID, project.ID, "project id")
 }
 
+// readProject is a helper function to read a single project from the body
 func readProject(t *testing.T, r io.Reader) model.Project {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -92,6 +93,7 @@ func readProject(t *testing.T, r io.Reader) model.Project {
 	return project
 }
 
+// readProjects is a helper function to read array of projects from the body
 func readProjects(t *testing.T, r io.Reader) []model.Project {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
