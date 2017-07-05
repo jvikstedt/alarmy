@@ -65,3 +65,9 @@ func (s *BoltStore) RecreateBuckets(names ...[]byte) error {
 func (s *BoltStore) Close() error {
 	return s.db.Close()
 }
+
+func (s *BoltStore) Store() Store {
+	return Store{
+		ProjectStore: NewBoltProjectStore(s),
+	}
+}

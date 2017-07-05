@@ -23,11 +23,7 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	boltProjectStore := store.NewBoltProjectStore(boltStore)
-
-	stores["bolt"] = store.Store{
-		ProjectStore: boltProjectStore,
-	}
+	stores["bolt"] = boltStore.Store()
 
 	var result int
 	for k, v := range stores {

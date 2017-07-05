@@ -27,11 +27,7 @@ to quickly create a Cobra application.`,
 		}
 		defer boltStore.Close()
 
-		store := store.Store{
-			ProjectStore: store.NewBoltProjectStore(boltStore),
-		}
-
-		api := api.NewApi(store)
+		api := api.NewApi(boltStore.Store())
 		handler, err := api.Handler()
 		if err != nil {
 			fmt.Println(err)
