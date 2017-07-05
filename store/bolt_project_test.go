@@ -57,3 +57,11 @@ func TestProjectDestroy(t *testing.T) {
 	_, err = currentStore.ProjectGetOne(project.ID)
 	assert.Error(t, err, "project should not be in the store after destroy")
 }
+
+func TestProjectGetOne(t *testing.T) {
+	initialProject, _ := currentStore.ProjectCreate(model.Project{Name: "Golang"})
+
+	testProject, err := currentStore.ProjectGetOne(initialProject.ID)
+	assert.Nil(t, err, "ProjectGetOne should not return an error")
+	assert.Equal(t, initialProject.Name, testProject.Name, "ProjectGetOne should return correct project")
+}
