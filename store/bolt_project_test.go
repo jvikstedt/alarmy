@@ -47,6 +47,18 @@ func TestProjectCreate(t *testing.T) {
 	}
 }
 
+func TestProjectUpdate(t *testing.T) {
+	project, _ := currentStore.ProjectCreate(model.Project{Name: "Javascript"})
+	project.Name = "Golang"
+
+	testProject, err := currentStore.ProjectUpdate(project)
+	assert.Nil(t, err, "ProjectUpdate should not return an error")
+	assert.Equal(t, project.Name, testProject.Name, "project name should be the updated one")
+
+	afterUpdateProject, _ := currentStore.ProjectGetOne(project.ID)
+	assert.Equal(t, project.Name, afterUpdateProject.Name, "project name should be the updated one")
+}
+
 func TestProjectDestroy(t *testing.T) {
 	project, _ := currentStore.ProjectCreate(model.Project{Name: "Golang"})
 
