@@ -92,6 +92,9 @@ func (s *BoltProjectStore) ProjectGetOne(id int) (model.Project, error) {
 		b := tx.Bucket(BucketKeyProjects)
 
 		data := b.Get(util.Itob(id))
+		if len(data) <= 0 {
+			return fmt.Errorf("No record found with id of %d", id)
+		}
 		return json.Unmarshal(data, &project)
 	})
 	return project, err

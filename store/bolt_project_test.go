@@ -46,3 +46,14 @@ func TestProjectCreate(t *testing.T) {
 		assert.True(t, duration > 0 && duration < 1, "duration since updated at should be between 0 and 1 seconds")
 	}
 }
+
+func TestProjectDestroy(t *testing.T) {
+	project, _ := currentStore.ProjectCreate(model.Project{Name: "Golang"})
+
+	_, err := currentStore.ProjectGetOne(project.ID)
+	assert.Nil(t, err, "project should be in the store before destroy")
+	err = currentStore.ProjectDestroy(project.ID)
+	assert.Nil(t, err, "ProjectDestroy should not return an error")
+	_, err = currentStore.ProjectGetOne(project.ID)
+	assert.Error(t, err, "project should not be in the store after destroy")
+}
