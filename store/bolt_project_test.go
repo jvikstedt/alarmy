@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func BoltProjectAllTest(t *testing.T) {
+func TestBoltProjectAll(t *testing.T) {
 	projectStore.ProjectRemoveAll()
 
 	// Zero projects
