@@ -1,29 +1,44 @@
 package store_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/jvikstedt/alarmy/store"
 )
 
-var boltStore store.BoltStore
-var projectStore store.ProjectStore
+var stores = make(map[string]store.Store)
+var currentStore store.Store
 
 func TestMain(m *testing.M) {
 	boltStore, err := store.NewBoltStore("alarmy_test.db")
 	if err != nil {
 		panic(err)
 	}
+	defer boltStore.Close()
 
 	err = boltStore.RecreateAllTables()
 	if err != nil {
 		panic(err)
 	}
 
-	projectStore = store.NewBoltProjectStore(boltStore)
+	boltProjectStore := store.NewBoltProjectStore(boltStore)
 
-	retCode := m.Run()
-	boltStore.Close()
-	os.Exit(retCode)
+	stores["bolt"] = store.Store{
+		ProjectStore: boltProjectStore,
+	}
+
+	var result int
+	for k, v := range stores {
+		fmt.Printf("Setting store: %s\n", k)
+		currentStore = v
+
+		retCode := m.Run()
+		if retCode != 0 {
+			result = retCode
+		}
+	}
+
+	os.Exit(result)
 }

@@ -9,24 +9,24 @@ import (
 )
 
 func TestProjectAll(t *testing.T) {
-	projectStore.ProjectRemoveAll()
+	currentStore.ProjectRemoveAll()
 
 	// Zero projects
-	projects, err := projectStore.ProjectAll()
+	projects, err := currentStore.ProjectAll()
 	assert.Nil(t, err, "project all should not return an error")
 	assert.Equal(t, 0, len(projects), "should be 0 projects")
 
 	project := model.Project{Name: "Golang"}
-	projectStore.ProjectCreate(project)
+	currentStore.ProjectCreate(project)
 
 	// One project
-	projects, err = projectStore.ProjectAll()
+	projects, err = currentStore.ProjectAll()
 	assert.Nil(t, err, "project all should not return an error")
 	assert.Equal(t, 1, len(projects), "should be 1 project")
 }
 
 func TestProjectCreate(t *testing.T) {
-	projectStore.ProjectRemoveAll()
+	currentStore.ProjectRemoveAll()
 
 	testProjects := []model.Project{
 		model.Project{Name: "Golang"},
@@ -35,7 +35,7 @@ func TestProjectCreate(t *testing.T) {
 	}
 
 	for i, p := range testProjects {
-		project, err := projectStore.ProjectCreate(p)
+		project, err := currentStore.ProjectCreate(p)
 
 		assert.Nil(t, err, "ProjectCreate should not return an error")
 		assert.Equal(t, i+1, project.ID, "id should be the same")
