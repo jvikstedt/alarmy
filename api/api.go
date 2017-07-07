@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/jvikstedt/alarmy/store"
-	"github.com/pressly/chi"
-	"github.com/pressly/chi/middleware"
 )
 
 type Api struct {
@@ -31,6 +31,9 @@ func (a *Api) Handler() (http.Handler, error) {
 	r.Route("/projects", func(r chi.Router) {
 		r.Get("/", a.ProjectAll)
 		r.Post("/", a.ProjectCreate)
+		r.Route("/{projectID}", func(r chi.Router) {
+			r.Get("/", a.ProjectGetOne)
+		})
 	})
 
 	return r, nil

@@ -59,6 +59,8 @@ func TestProjectAll(t *testing.T) {
 func TestProjectCreate(t *testing.T) {
 	b := bytes.NewBufferString(`{"Name": "Golang"}`)
 	req, _ := http.NewRequest("POST", "/projects", b)
+	req.Header.Add("Content-Type", "application/json")
+
 	rr := httptest.NewRecorder()
 
 	// Setup mock
@@ -75,6 +77,24 @@ func TestProjectCreate(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, rr.Code, "status code")
 	assert.Equal(t, testProject.Name, project.Name, "project name")
 	assert.Equal(t, testProject.ID, project.ID, "project id")
+}
+
+func TestProjectGetOne(t *testing.T) {
+	for i, p := range testProjects {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/projects/%d", i+1), nil)
+		rr := httptest.NewRecorder()
+
+		mockStore.Project.ProjectGetOne.Returns.Project = p
+		handler.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code, "status code")
+		assert.Equal(t, p.ID, mockStore.Project.ProjectGetOne.Receives.ID)
+		project := readProject(t, rr.Body)
+		assert.Equal(t, p.ID, project.ID, "project id")
+		assert.Equal(t, p.Name, project.Name, "project name")
+		assert.Equal(t, p.CreatedAt, project.CreatedAt, "project createdAt")
+		assert.Equal(t, p.UpdatedAt, project.UpdatedAt, "project updatedAt")
+	}
 }
 
 // readProject is a helper function to read a single project from the body

@@ -2,9 +2,11 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/render"
 	"github.com/jvikstedt/alarmy/model"
-	"github.com/pressly/chi/render"
 )
 
 type ProjectRequest struct {
@@ -30,7 +32,7 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	data := &ProjectRequest{}
-	if err := render.Bind(r.Body, data); err != nil {
+	if err := render.Bind(r, data); err != nil {
 		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 		return
 	}
@@ -42,5 +44,29 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusCreated)
+	render.JSON(w, r, project)
+}
+
+func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
+	var project model.Project
+	if idStr := chi.URLParam(r, "projectID"); idStr != "" {
+		projectID, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		project, err = a.store.ProjectGetOne(projectID)
+
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
 	render.JSON(w, r, project)
 }
