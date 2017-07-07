@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -27,7 +28,9 @@ to quickly create a Cobra application.`,
 		}
 		defer boltStore.Close()
 
-		api := api.NewApi(boltStore.Store())
+		logger := log.New(os.Stdout, "", log.LstdFlags)
+
+		api := api.NewApi(boltStore.Store(), logger)
 		handler, err := api.Handler()
 		if err != nil {
 			fmt.Println(err)

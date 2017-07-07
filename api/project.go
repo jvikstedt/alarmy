@@ -23,6 +23,7 @@ func (p *ProjectRequest) Bind(r *http.Request) error {
 func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 	projects, err := a.store.ProjectAll()
 	if err != nil {
+		a.Printf(r.Context(), "%v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -33,12 +34,14 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	data := &ProjectRequest{}
 	if err := render.Bind(r, data); err != nil {
+		a.Printf(r.Context(), "%v", err)
 		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 		return
 	}
 
 	project, err := a.store.ProjectCreate(data.Project)
 	if err != nil {
+		a.Printf(r.Context(), "%v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -52,6 +55,7 @@ func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 	if idStr := chi.URLParam(r, "projectID"); idStr != "" {
 		projectID, err := strconv.Atoi(idStr)
 		if err != nil {
+			a.Printf(r.Context(), "%v", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -59,10 +63,12 @@ func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 		project, err = a.store.ProjectGetOne(projectID)
 
 		if err != nil {
+			a.Printf(r.Context(), "%v", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 	} else {
+		a.Printf(r.Context(), "projectID not set")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

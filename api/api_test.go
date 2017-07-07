@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -23,7 +24,9 @@ func setup() {
 	store := store.Store{
 		ProjectStore: mockStore,
 	}
-	api := api.NewApi(store)
+
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+	api := api.NewApi(store, logger)
 
 	var err error
 	handler, err = api.Handler()

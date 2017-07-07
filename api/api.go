@@ -1,7 +1,10 @@
 package api
 
 import (
+	"context"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -9,12 +12,14 @@ import (
 )
 
 type Api struct {
-	store store.Store
+	store  store.Store
+	logger *log.Logger
 }
 
-func NewApi(store store.Store) *Api {
+func NewApi(store store.Store, logger *log.Logger) *Api {
 	return &Api{
-		store: store,
+		store:  store,
+		logger: logger,
 	}
 }
 
@@ -24,7 +29,7 @@ func (a *Api) Handler() (http.Handler, error) {
 	// Middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{Logger: log.New(os.Stdout, "", log.LstdFlags)}))
 	r.Use(middleware.Recoverer)
 
 	// Setup routes
@@ -37,4 +42,8 @@ func (a *Api) Handler() (http.Handler, error) {
 	})
 
 	return r, nil
+}
+
+func (a *Api) Printf(ctx context.Context, format string, v ...interface{}) {
+	a.logger.Printf("[%s] "+format, middleware.GetReqID(ctx), v)
 }
