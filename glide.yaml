@@ -6,9 +6,6 @@ import:
   version: ^3.0.0
   subpackages:
   - render
-- package: github.com/jvikstedt/alarmii
-  subpackages:
-  - util
 - package: github.com/mitchellh/go-homedir
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper

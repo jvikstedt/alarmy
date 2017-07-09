@@ -1,5 +1,5 @@
-hash: db02e62d4d3f6bbc795b7fd37ad18663c2b5b3361655e2aa258aaada89003ed3
-updated: 2017-07-07T18:08:47.219842656+03:00
+hash: 7c2e039bc1b33c37168469093b371267b4d1e578e9b38253131e2eba96fe909b
+updated: 2017-07-10T00:16:19.852146309+03:00
 imports:
 - name: github.com/boltdb/bolt
   version: 583e8937c61f1af6513608ccc75c97b6abdf4ff9
@@ -8,6 +8,7 @@ imports:
 - name: github.com/go-chi/chi
   version: 967844826e58cf31213a7dfb82455d242ad85101
   subpackages:
+  - middleware
   - render
 - name: github.com/hashicorp/hcl
   version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
