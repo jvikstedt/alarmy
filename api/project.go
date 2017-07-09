@@ -95,3 +95,38 @@ func (a *Api) ProjectDestroy(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 }
+
+// ProjectUpdate update a project by id
+func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
+	projectID, err := a.URLParamInt(r, "projectID")
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	data := &ProjectRequest{}
+	if err := render.Bind(r, data); err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+		return
+	}
+	data.Project.ID = projectID
+
+	if errors := data.Project.Errors(); len(errors) > 0 {
+		a.Printf(r.Context(), "%v", errors)
+		render.Status(r, http.StatusUnprocessableEntity)
+		render.JSON(w, r, errors)
+		return
+	}
+
+	project, err := a.store.ProjectUpdate(data.Project)
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, project)
+}

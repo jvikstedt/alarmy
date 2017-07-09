@@ -39,6 +39,17 @@ type MockStore struct {
 				Error error
 			}
 		}
+
+		ProjectUpdate struct {
+			CallCount int
+			Receives  struct {
+				Project model.Project
+			}
+			Returns struct {
+				Project model.Project
+				Error   error
+			}
+		}
 	}
 }
 
@@ -52,7 +63,9 @@ func (s *MockStore) ProjectCreate(project model.Project) (model.Project, error) 
 }
 
 func (s *MockStore) ProjectUpdate(project model.Project) (model.Project, error) {
-	return model.Project{}, nil
+	s.Project.ProjectUpdate.CallCount++
+	s.Project.ProjectUpdate.Receives.Project = project
+	return s.Project.ProjectUpdate.Returns.Project, s.Project.ProjectUpdate.Returns.Error
 }
 
 func (s *MockStore) ProjectDestroy(id int) error {

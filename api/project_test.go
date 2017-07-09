@@ -148,6 +148,32 @@ func readProject(t *testing.T, r io.Reader) model.Project {
 	return project
 }
 
+func TestProjectUpdate(t *testing.T) {
+	// Happy case
+	b := bytes.NewBufferString(`{"Name": "Test"}`)
+
+	req, _ := http.NewRequest("PATCH", "/projects/1", b)
+	req.Header.Add("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "status code")
+	assert.Equal(t, "Test", mockStore.Project.ProjectUpdate.Receives.Project.Name)
+	assert.Equal(t, 1, mockStore.Project.ProjectUpdate.Receives.Project.ID)
+
+	// Invalid name
+	b = bytes.NewBufferString(`{"Name": ""}`)
+
+	req, _ = http.NewRequest("PATCH", "/projects/1", b)
+	req.Header.Add("Content-Type", "application/json")
+	rr = httptest.NewRecorder()
+	mockStore.Project.ProjectUpdate.CallCount = 0
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code, "status code")
+	assert.Equal(t, 0, mockStore.Project.ProjectUpdate.CallCount, "store should not be called")
+}
+
 // readProjects is a helper function to read array of projects from the body
 func readProjects(t *testing.T, r io.Reader) []model.Project {
 	data, err := ioutil.ReadAll(r)
