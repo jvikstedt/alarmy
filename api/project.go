@@ -2,9 +2,7 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/render"
 	"github.com/jvikstedt/alarmy/model"
 )
@@ -20,6 +18,7 @@ func (p *ProjectRequest) Bind(r *http.Request) error {
 	return nil
 }
 
+// ProjectAll handler for getting all projects
 func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 	projects, err := a.store.ProjectAll()
 	if err != nil {
@@ -31,6 +30,7 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, projects)
 }
 
+// ProjectCreate handler for creating a project
 func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	data := &ProjectRequest{}
 	if err := render.Bind(r, data); err != nil {
@@ -57,25 +57,19 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, project)
 }
 
+// ProjectGetOne handler to get single project by id
 func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 	var project model.Project
-	if idStr := chi.URLParam(r, "projectID"); idStr != "" {
-		projectID, err := strconv.Atoi(idStr)
-		if err != nil {
-			a.Printf(r.Context(), "%v", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
+	projectID, err := a.URLParamInt(r, "projectID")
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
 
-		project, err = a.store.ProjectGetOne(projectID)
+	project, err = a.store.ProjectGetOne(projectID)
 
-		if err != nil {
-			a.Printf(r.Context(), "%v", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-	} else {
-		a.Printf(r.Context(), "projectID not set")
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

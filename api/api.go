@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -46,4 +48,13 @@ func (a *Api) Handler() (http.Handler, error) {
 
 func (a *Api) Printf(ctx context.Context, format string, v ...interface{}) {
 	a.logger.Printf("[%s] "+format, middleware.GetReqID(ctx), v)
+}
+
+func (a *Api) URLParamInt(r *http.Request, key string) (int, error) {
+	asStr := chi.URLParam(r, key)
+	if asStr == "" {
+		return 0, fmt.Errorf("%s not set", key)
+	}
+
+	return strconv.Atoi(asStr)
 }
