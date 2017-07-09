@@ -91,16 +91,14 @@ func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := &ProjectRequest{}
-	if err := render.Bind(r, data); err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+	err = render.Bind(r, data)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 	data.Project.ID = projectID
 
 	if errors := data.Project.Errors(); len(errors) > 0 {
-		a.Printf(r.Context(), "%v", errors)
-		render.Status(r, http.StatusUnprocessableEntity)
+		a.HandleError(w, r, errors, http.StatusUnprocessableEntity)
 		render.JSON(w, r, errors)
 		return
 	}

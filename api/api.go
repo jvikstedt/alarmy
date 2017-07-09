@@ -60,10 +60,14 @@ func (a *Api) URLParamInt(r *http.Request, key string) (int, error) {
 	return strconv.Atoi(asStr)
 }
 
+func (a *Api) HandleError(w http.ResponseWriter, r *http.Request, err interface{}, statusCode int) {
+	a.Printf(r.Context(), "%v", err)
+	http.Error(w, http.StatusText(statusCode), statusCode)
+}
+
 func (a *Api) CheckErr(w http.ResponseWriter, r *http.Request, err error, statusCode int) bool {
 	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(statusCode), statusCode)
+		a.HandleError(w, r, err, statusCode)
 		return true
 	}
 	return false
