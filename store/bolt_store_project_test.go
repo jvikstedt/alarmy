@@ -56,6 +56,7 @@ func TestProjectUpdate(t *testing.T) {
 	assert.Equal(t, project.Name, testProject.Name, "project name should be the updated one")
 
 	afterUpdateProject, _ := currentStore.ProjectGetOne(project.ID)
+	assert.True(t, project.UpdatedAt.Before(afterUpdateProject.UpdatedAt), "UpdatedAt should be updated after project update")
 	assert.Equal(t, project.Name, afterUpdateProject.Name, "project name should be the updated one")
 }
 
