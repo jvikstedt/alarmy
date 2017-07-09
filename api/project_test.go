@@ -77,6 +77,17 @@ func TestProjectCreate(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, rr.Code, "status code")
 	assert.Equal(t, testProject.Name, project.Name, "project name")
 	assert.Equal(t, testProject.ID, project.ID, "project id")
+
+	// Validation test
+	b = bytes.NewBufferString(`{"Name": ""}`)
+	req, _ = http.NewRequest("POST", "/projects", b)
+	req.Header.Add("Content-Type", "application/json")
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code, "status code")
+	errors := readErrors(t, rr.Body)
+	assert.Contains(t, errors["name"], "is required", "name validation required")
 }
 
 func TestProjectGetOne(t *testing.T) {
@@ -127,4 +138,21 @@ func readProjects(t *testing.T, r io.Reader) []model.Project {
 	}
 
 	return projects
+}
+
+// readErrors is a helper function to read map of errors from the body
+func readErrors(t *testing.T, r io.Reader) map[string][]string {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		t.Errorf("Error reading from body %e", err)
+	}
+	t.Log(string(data))
+
+	errors := make(map[string][]string)
+	err = json.Unmarshal(data, &errors)
+	if err != nil {
+		t.Errorf("JSON unmarshalling error %e", err)
+	}
+
+	return errors
 }

@@ -39,6 +39,13 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if errors := data.Project.Errors(); len(errors) > 0 {
+		a.Printf(r.Context(), "%v", errors)
+		render.Status(r, http.StatusUnprocessableEntity)
+		render.JSON(w, r, errors)
+		return
+	}
+
 	project, err := a.store.ProjectCreate(data.Project)
 	if err != nil {
 		a.Printf(r.Context(), "%v", err)
