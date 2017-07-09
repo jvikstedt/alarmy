@@ -59,14 +59,13 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 
 // ProjectGetOne handler to get single project by id
 func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
-	var project model.Project
 	projectID, err := a.URLParamInt(r, "projectID")
 	if err != nil {
 		a.Printf(r.Context(), "%v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
-	project, err = a.store.ProjectGetOne(projectID)
+	project, err := a.store.ProjectGetOne(projectID)
 
 	if err != nil {
 		a.Printf(r.Context(), "%v", err)
@@ -76,4 +75,23 @@ func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, project)
+}
+
+// ProjectDestroy delete a single project by id
+func (a *Api) ProjectDestroy(w http.ResponseWriter, r *http.Request) {
+	projectID, err := a.URLParamInt(r, "projectID")
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	err = a.store.ProjectDestroy(projectID)
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
 }

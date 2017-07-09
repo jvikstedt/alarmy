@@ -30,6 +30,15 @@ type MockStore struct {
 				Error   error
 			}
 		}
+
+		ProjectDestroy struct {
+			Receives struct {
+				ID int
+			}
+			Returns struct {
+				Error error
+			}
+		}
 	}
 }
 
@@ -47,7 +56,8 @@ func (s *MockStore) ProjectUpdate(project model.Project) (model.Project, error) 
 }
 
 func (s *MockStore) ProjectDestroy(id int) error {
-	return nil
+	s.Project.ProjectDestroy.Receives.ID = id
+	return s.Project.ProjectDestroy.Returns.Error
 }
 
 func (s *MockStore) ProjectGetOne(id int) (model.Project, error) {

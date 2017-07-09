@@ -108,6 +108,30 @@ func TestProjectGetOne(t *testing.T) {
 	}
 }
 
+func TestProjectDestroy(t *testing.T) {
+	// Happy case
+	req, _ := http.NewRequest("DELETE", "/projects/1", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "status code")
+	assert.Equal(t, 1, mockStore.Project.ProjectDestroy.Receives.ID, "project id")
+
+	// invalid id provided
+	req, _ = http.NewRequest("DELETE", "/projects/asddsa", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code, "status code")
+
+	// DB returns an error
+	mockStore.Project.ProjectDestroy.Returns.Error = fmt.Errorf("any error")
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code, "status code")
+}
+
 // readProject is a helper function to read a single project from the body
 func readProject(t *testing.T, r io.Reader) model.Project {
 	data, err := ioutil.ReadAll(r)
@@ -146,7 +170,6 @@ func readErrors(t *testing.T, r io.Reader) map[string][]string {
 	if err != nil {
 		t.Errorf("Error reading from body %e", err)
 	}
-	t.Log(string(data))
 
 	errors := make(map[string][]string)
 	err = json.Unmarshal(data, &errors)

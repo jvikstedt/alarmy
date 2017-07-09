@@ -40,6 +40,7 @@ func (a *Api) Handler() (http.Handler, error) {
 		r.Post("/", a.ProjectCreate)
 		r.Route("/{projectID}", func(r chi.Router) {
 			r.Get("/", a.ProjectGetOne)
+			r.Delete("/", a.ProjectDestroy)
 		})
 	})
 
