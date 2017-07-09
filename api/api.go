@@ -59,3 +59,12 @@ func (a *Api) URLParamInt(r *http.Request, key string) (int, error) {
 
 	return strconv.Atoi(asStr)
 }
+
+func (a *Api) CheckErr(w http.ResponseWriter, r *http.Request, err error, statusCode int) bool {
+	if err != nil {
+		a.Printf(r.Context(), "%v", err)
+		http.Error(w, http.StatusText(statusCode), statusCode)
+		return true
+	}
+	return false
+}

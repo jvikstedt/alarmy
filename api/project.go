@@ -21,9 +21,7 @@ func (p *ProjectRequest) Bind(r *http.Request) error {
 // ProjectAll handler for getting all projects
 func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 	projects, err := a.store.ProjectAll()
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
@@ -33,9 +31,8 @@ func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
 // ProjectCreate handler for creating a project
 func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	data := &ProjectRequest{}
-	if err := render.Bind(r, data); err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+	err := render.Bind(r, data)
+	if stop := a.CheckErr(w, r, err, http.StatusUnprocessableEntity); stop {
 		return
 	}
 
@@ -47,9 +44,7 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	project, err := a.store.ProjectCreate(data.Project)
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
@@ -60,16 +55,12 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 // ProjectGetOne handler to get single project by id
 func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 	projectID, err := a.URLParamInt(r, "projectID")
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
+		return
 	}
 
 	project, err := a.store.ProjectGetOne(projectID)
-
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
@@ -80,16 +71,12 @@ func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 // ProjectDestroy delete a single project by id
 func (a *Api) ProjectDestroy(w http.ResponseWriter, r *http.Request) {
 	projectID, err := a.URLParamInt(r, "projectID")
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
 	err = a.store.ProjectDestroy(projectID)
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
@@ -99,9 +86,7 @@ func (a *Api) ProjectDestroy(w http.ResponseWriter, r *http.Request) {
 // ProjectUpdate update a project by id
 func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
 	projectID, err := a.URLParamInt(r, "projectID")
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
@@ -121,9 +106,7 @@ func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	project, err := a.store.ProjectUpdate(data.Project)
-	if err != nil {
-		a.Printf(r.Context(), "%v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
