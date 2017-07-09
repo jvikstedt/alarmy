@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/go-chi/chi"
@@ -31,7 +30,7 @@ func (a *Api) Handler() (http.Handler, error) {
 	// Middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{Logger: log.New(os.Stdout, "", log.LstdFlags)}))
+	r.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{Logger: a.logger}))
 	r.Use(middleware.Recoverer)
 
 	// Setup routes

@@ -28,7 +28,13 @@ to quickly create a Cobra application.`,
 		}
 		defer boltStore.Close()
 
-		logger := log.New(os.Stdout, "", log.LstdFlags)
+		f, err := os.OpenFile("dev.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		logger := log.New(f, "", log.LstdFlags)
 
 		api := api.NewApi(boltStore.Store(), logger)
 		handler, err := api.Handler()
