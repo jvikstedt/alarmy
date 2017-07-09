@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"bytes"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 var handler http.Handler
 var mockStore *store.MockStore
+var logs = &bytes.Buffer{}
 
 func TestMain(m *testing.M) {
 	setup()
@@ -25,7 +27,7 @@ func setup() {
 		ProjectStore: mockStore,
 	}
 
-	logger := log.New(os.Stdout, "", log.LstdFlags)
+	logger := log.New(logs, "", log.LstdFlags)
 	api := api.NewApi(store, logger)
 
 	var err error
