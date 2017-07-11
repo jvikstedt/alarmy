@@ -17,7 +17,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/jvikstedt/alarmy/service"
+	"github.com/jvikstedt/alarmy/model"
+	"github.com/jvikstedt/alarmy/transform"
 	"github.com/spf13/cobra"
 )
 
@@ -46,12 +47,12 @@ func init() {
 	// is called directly, e.g.:
 	// projectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	projectCmd.AddCommand(projectList)
+	projectCmd.AddCommand(projectNew)
 }
 
 // projectCmd represents the project command
-var projectList = &cobra.Command{
-	Use:   "list",
+var projectNew = &cobra.Command{
+	Use:   "new",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -60,14 +61,17 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		projects, err := service.ProjectAll()
+		project := model.Project{}
+
+		err := transform.Modify(&project)
 		if err != nil {
 			panic(err)
 		}
-		data, err := json.Marshal(projects)
+
+		pjson, err := json.MarshalIndent(project, "", "    ")
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(string(data))
+		fmt.Println(string(pjson))
 	},
 }
