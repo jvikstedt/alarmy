@@ -17,25 +17,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/jvikstedt/alarmy/model"
 	"github.com/jvikstedt/alarmy/service"
-	"github.com/jvikstedt/alarmy/transform"
 	"github.com/spf13/cobra"
 )
 
-type Resource struct {
-	Object  interface{}
-	Objects interface{}
-	Path    string
-}
-
-var resources = map[string]Resource{
-	"project": Resource{Object: &model.Project{}, Objects: &[]model.Project{}, Path: "projects"},
-}
-
-// newCmd represents the new command
-var newCmd = &cobra.Command{
-	Use:   "new",
+// listCmd represents the list command
+var listCmd = &cobra.Command{
+	Use:   "list",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -53,42 +41,31 @@ to quickly create a Cobra application.`,
 			return
 		}
 
-		err := transform.Modify(resource.Object)
+		err := service.GetResource(resource.Path, resource.Objects)
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			return
 		}
 
-		pjson, err := json.MarshalIndent(resource.Object, "", "    ")
+		pjson, err := json.MarshalIndent(resource.Objects, "", "    ")
 		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(pjson))
-
-		fmt.Println("Saving...")
-
-		err = service.PostAsJSON(resource.Path, resource.Object)
-		if err != nil {
-			panic(err)
-		}
-
-		pjson, err = json.MarshalIndent(resource.Object, "", "    ")
-		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			return
 		}
 		fmt.Println(string(pjson))
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(newCmd)
+	RootCmd.AddCommand(listCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// newCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// newCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

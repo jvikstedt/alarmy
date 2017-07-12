@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	"github.com/jvikstedt/alarmy/model"
 )
 
 const BASE_URL = "http://localhost:8080"
@@ -17,24 +15,22 @@ var client = &http.Client{
 	Timeout: time.Second * 10,
 }
 
-func ProjectAll() ([]model.Project, error) {
-	var projects []model.Project
-
-	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/projects", BASE_URL), nil)
+func GetResource(path string, resource interface{}) error {
+	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/%s", BASE_URL, path), nil)
 	resp, err := client.Do(req)
 	if err != nil {
-		return projects, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return projects, err
+		return err
 	}
 
-	err = json.Unmarshal(data, &projects)
+	err = json.Unmarshal(data, resource)
 
-	return projects, err
+	return err
 }
 
 func PostAsJSON(path string, v interface{}) error {
