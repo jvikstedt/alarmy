@@ -37,13 +37,13 @@ func ProjectAll() ([]model.Project, error) {
 	return projects, err
 }
 
-func ProjectNew(v interface{}) error {
-	pJSON, err := json.Marshal(v)
+func PostAsJSON(path string, v interface{}) error {
+	asJSON, err := json.Marshal(v)
 	if err != nil {
 		return err
 	}
-	b := bytes.NewBuffer(pJSON)
-	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/projects", BASE_URL), b)
+	b := bytes.NewBuffer(asJSON)
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/%s", BASE_URL, path), b)
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)

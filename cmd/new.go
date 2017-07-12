@@ -23,8 +23,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var objects = map[string]interface{}{
-	"project": &model.Project{},
+type Object struct {
+	Type interface{}
+	Path string
+}
+
+var objects = map[string]Object{
+	"project": Object{Type: &model.Project{}, Path: "projects"},
 }
 
 // newCmd represents the new command
@@ -40,19 +45,19 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		v, ok := objects[key]
+		object, ok := objects[key]
 
 		if !ok {
 			fmt.Printf("object %s not found", key)
 			return
 		}
 
-		err := transform.Modify(v)
+		err := transform.Modify(object.Type)
 		if err != nil {
 			panic(err)
 		}
 
-		pjson, err := json.MarshalIndent(v, "", "    ")
+		pjson, err := json.MarshalIndent(object.Type, "", "    ")
 		if err != nil {
 			panic(err)
 		}
@@ -60,12 +65,12 @@ to quickly create a Cobra application.`,
 
 		fmt.Println("Saving...")
 
-		err = service.ProjectNew(v)
+		err = service.PostAsJSON(object.Path, object.Type)
 		if err != nil {
 			panic(err)
 		}
 
-		pjson, err = json.MarshalIndent(v, "", "    ")
+		pjson, err = json.MarshalIndent(object.Type, "", "    ")
 		if err != nil {
 			panic(err)
 		}
