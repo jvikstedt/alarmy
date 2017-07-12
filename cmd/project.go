@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/jvikstedt/alarmy/model"
+	"github.com/jvikstedt/alarmy/service"
 	"github.com/jvikstedt/alarmy/transform"
 	"github.com/spf13/cobra"
 )
@@ -69,6 +70,19 @@ to quickly create a Cobra application.`,
 		}
 
 		pjson, err := json.MarshalIndent(project, "", "    ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(string(pjson))
+
+		fmt.Println("Saving...")
+
+		project, err = service.ProjectNew(project)
+		if err != nil {
+			panic(err)
+		}
+
+		pjson, err = json.MarshalIndent(project, "", "    ")
 		if err != nil {
 			panic(err)
 		}

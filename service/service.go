@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -34,4 +35,29 @@ func ProjectAll() ([]model.Project, error) {
 	err = json.Unmarshal(data, &projects)
 
 	return projects, err
+}
+
+func ProjectNew(project model.Project) (model.Project, error) {
+	pJSON, err := json.Marshal(project)
+	if err != nil {
+		return project, err
+	}
+	b := bytes.NewBuffer(pJSON)
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/projects", BASE_URL), b)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return project, err
+	}
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return project, err
+	}
+
+	err = json.Unmarshal(data, &project)
+
+	return project, err
 }
