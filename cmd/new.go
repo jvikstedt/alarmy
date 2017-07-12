@@ -33,6 +33,16 @@ var resources = map[string]Resource{
 	"project": Resource{Object: &model.Project{}, Objects: &[]model.Project{}, Path: "projects"},
 }
 
+func resourceByKey(key string) (Resource, error) {
+	resource, ok := resources[key]
+
+	if !ok {
+		return Resource{}, fmt.Errorf("object %s not found", key)
+	}
+
+	return resource, nil
+}
+
 // newCmd represents the new command
 var newCmd = &cobra.Command{
 	Use:   "new",
@@ -46,14 +56,12 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		resource, ok := resources[key]
-
-		if !ok {
-			fmt.Printf("object %s not found", key)
-			return
+		resource, err := resourceByKey(key)
+		if err != nil {
+			panic(err)
 		}
 
-		err := transform.Modify(resource.Object)
+		err = transform.Modify(resource.Object)
 		if err != nil {
 			panic(err)
 		}

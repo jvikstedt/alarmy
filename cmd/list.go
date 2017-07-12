@@ -34,14 +34,12 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		resource, ok := resources[key]
-
-		if !ok {
-			fmt.Printf("object %s not found", key)
-			return
+		resource, err := resourceByKey(key)
+		if err != nil {
+			panic(err)
 		}
 
-		err := service.GetResource(resource.Path, resource.Objects)
+		err = service.GetResource(resource.Path, resource.Objects)
 		if err != nil {
 			fmt.Println(err)
 			return
