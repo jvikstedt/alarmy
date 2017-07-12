@@ -37,10 +37,10 @@ func ProjectAll() ([]model.Project, error) {
 	return projects, err
 }
 
-func ProjectNew(project model.Project) (model.Project, error) {
-	pJSON, err := json.Marshal(project)
+func ProjectNew(v interface{}) error {
+	pJSON, err := json.Marshal(v)
 	if err != nil {
-		return project, err
+		return err
 	}
 	b := bytes.NewBuffer(pJSON)
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/projects", BASE_URL), b)
@@ -48,16 +48,16 @@ func ProjectNew(project model.Project) (model.Project, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return project, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return project, err
+		return err
 	}
 
-	err = json.Unmarshal(data, &project)
+	err = json.Unmarshal(data, &v)
 
-	return project, err
+	return err
 }
