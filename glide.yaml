@@ -11,6 +11,7 @@ import:
 - package: github.com/mitchellh/go-homedir
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
+- package: gopkg.in/robfig/cron.v2
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
