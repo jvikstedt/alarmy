@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/jvikstedt/alarmy/api"
+	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
 	"github.com/spf13/cobra"
 )
@@ -33,6 +34,11 @@ to quickly create a Cobra application.`,
 			panic(err)
 		}
 		defer f.Close()
+
+		scheduler := schedule.NewCronScheduler()
+		scheduler.AddFunc(1, "@every 2s", func() { fmt.Println("testing") })
+		scheduler.AddFunc(2, "@every 5s", func() { fmt.Println("test 2") })
+		scheduler.Start()
 
 		logger := log.New(f, "", log.LstdFlags)
 

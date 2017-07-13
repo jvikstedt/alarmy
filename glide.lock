@@ -1,5 +1,5 @@
-hash: becbb15391a43160e93fa195b21c99e9af5521371e49d0e2f5948236de7ee010
-updated: 2017-07-13T18:41:44.930139784+03:00
+hash: c1c26989f6d5785c443219c59029934c1da59b66c291174d9e4444f26b30c382
+updated: 2017-07-13T21:10:44.189351644+03:00
 imports:
 - name: github.com/boltdb/bolt
   version: 583e8937c61f1af6513608ccc75c97b6abdf4ff9
@@ -36,6 +36,8 @@ imports:
   version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/pelletier/go-toml
   version: 69d355db5304c0f7f809a2edc054553e7142f016
+- name: github.com/robfig/cron
+  version: 736158dc09e10f1911ca3a1e1b01f11b566ce5db
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:
@@ -59,8 +61,6 @@ imports:
   subpackages:
   - transform
   - unicode/norm
-- name: gopkg.in/robfig/cron.v2
-  version: be2e0b0deed5a68ffee390b4583a13aff8321535
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
