@@ -31,6 +31,7 @@ type Resource struct {
 
 var resources = map[string]Resource{
 	"project": Resource{Object: &model.Project{}, Objects: &[]model.Project{}, Path: "projects"},
+	"job":     Resource{Object: &model.Job{}, Objects: &[]model.Job{}, Path: "jobs"},
 }
 
 func resourceByKey(key string) (Resource, error) {

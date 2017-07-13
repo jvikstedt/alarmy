@@ -44,6 +44,16 @@ func (a *Api) Handler() (http.Handler, error) {
 		})
 	})
 
+	r.Route("/jobs", func(r chi.Router) {
+		r.Get("/", a.JobAll)
+		r.Post("/", a.JobCreate)
+		r.Route("/{jobID}", func(r chi.Router) {
+			r.Get("/", a.JobGetOne)
+			r.Delete("/", a.JobDestroy)
+			r.Patch("/", a.JobUpdate)
+		})
+	})
+
 	return r, nil
 }
 

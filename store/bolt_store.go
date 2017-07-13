@@ -5,8 +5,10 @@ import (
 )
 
 var BucketKeyProjects = []byte("projects")
+var BucketKeyJobs = []byte("jobs")
 var Buckets = [][]byte{
 	BucketKeyProjects,
+	BucketKeyJobs,
 }
 
 type BoltStore struct {
@@ -69,5 +71,6 @@ func (s *BoltStore) Close() error {
 func (s *BoltStore) Store() Store {
 	return Store{
 		ProjectStore: NewBoltProjectStore(s),
+		JobStore:     NewBoltJobStore(s),
 	}
 }
