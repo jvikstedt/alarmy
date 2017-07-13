@@ -53,7 +53,11 @@ func PostAsJSON(path string, v interface{}) error {
 		return err
 	}
 
-	err = json.Unmarshal(data, &v)
+	if resp.StatusCode == http.StatusCreated {
+		err = json.Unmarshal(data, &v)
+	} else {
+		err = fmt.Errorf("Something went wrong status code %d, body %s", resp.StatusCode, string(data))
+	}
 
 	return err
 }
