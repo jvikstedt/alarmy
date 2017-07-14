@@ -15,6 +15,7 @@ func TestAddFunc(t *testing.T) {
 	defer scheduler.Stop()
 
 	callCh := make(chan bool, 3)
+	callCount := 0
 
 	callback := func(id schedule.EntryID) {
 		if id != 1 {
@@ -25,15 +26,18 @@ func TestAddFunc(t *testing.T) {
 
 	scheduler.AddFunc(1, "@every 1s", callback)
 
-	timeout := time.After(1 * time.Second)
+	timeout := time.After(2500 * time.Millisecond)
 
 Loop:
 	for {
 		select {
 		case <-timeout:
-			assert.FailNow(t, "timeout")
+			assert.FailNow(t, "timeout, callback did not get called enough times")
 		case <-callCh:
-			break Loop
+			callCount++
+			if callCount >= 2 {
+				break Loop
+			}
 		}
 	}
 }
