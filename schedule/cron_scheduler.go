@@ -10,7 +10,7 @@ import (
 type CronScheduler struct {
 	stop    chan struct{}
 	add     chan *Entry
-	remove  chan *Entry
+	remove  chan EntryID
 	entries []*Entry
 }
 
@@ -18,16 +18,16 @@ func NewCronScheduler() *CronScheduler {
 	return &CronScheduler{
 		stop:    make(chan struct{}),
 		add:     make(chan *Entry, 10),
-		remove:  make(chan *Entry, 10),
+		remove:  make(chan EntryID, 10),
 		entries: []*Entry{},
 	}
 }
 
 type Entry struct {
-	id       int
+	id       EntryID
 	schedule cron.Schedule
 	next     time.Time
-	cmd      func()
+	cmd      func(id EntryID)
 }
 
 type byTime []*Entry
@@ -44,7 +44,7 @@ func (s byTime) Less(i, j int) bool {
 	return s[i].next.Before(s[j].next)
 }
 
-func (c *CronScheduler) AddFunc(id int, spec string, cmd func()) error {
+func (c *CronScheduler) AddFunc(id EntryID, spec string, cmd func(id EntryID)) error {
 	schedule, err := cron.Parse(spec)
 	if err != nil {
 		return err
@@ -73,8 +73,8 @@ Loop:
 			break Loop
 		case e := <-c.add:
 			c.entries = append(c.entries, e)
-		case e := <-c.remove:
-			c.removeEntry(e)
+		case id := <-c.remove:
+			c.removeEntryByID(id)
 		default:
 			c.checker()
 		}
@@ -87,17 +87,17 @@ func (c *CronScheduler) checker() {
 		if e.next.After(now) || e.next.IsZero() {
 			break
 		}
-		go e.cmd()
+		go e.cmd(e.id)
 		e.next = e.schedule.Next(now)
 	}
 }
 
-func (c *CronScheduler) removeEntry(e *Entry) {
+func (c *CronScheduler) removeEntryByID(id EntryID) {
 	found := false
 	foundID := 0
 
 	for i, entry := range c.entries {
-		if entry == e {
+		if entry.id == id {
 			found = true
 			foundID = i
 			break
