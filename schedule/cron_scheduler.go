@@ -81,6 +81,10 @@ Loop:
 	}
 }
 
+func (c *CronScheduler) Stop() {
+	c.stop <- struct{}{}
+}
+
 func (c *CronScheduler) checker() {
 	now := time.Now()
 	for _, e := range c.entries {
