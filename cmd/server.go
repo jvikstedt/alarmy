@@ -36,13 +36,12 @@ to quickly create a Cobra application.`,
 		defer f.Close()
 
 		scheduler := schedule.NewCronScheduler()
-		scheduler.AddFunc(1, "@every 2s", func(id schedule.EntryID) { fmt.Println("testing") })
-		scheduler.AddFunc(2, "@every 5s", func(id schedule.EntryID) { fmt.Println("test 2") })
-		scheduler.Start()
+		go scheduler.Start()
+		defer scheduler.Stop()
 
 		logger := log.New(f, "", log.LstdFlags)
 
-		api := api.NewApi(boltStore.Store(), logger)
+		api := api.NewApi(boltStore.Store(), logger, scheduler)
 		handler, err := api.Handler()
 		if err != nil {
 			fmt.Println(err)

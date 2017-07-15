@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/jvikstedt/alarmy/model"
+	"github.com/jvikstedt/alarmy/schedule"
 )
 
 type JobRequest struct {
@@ -47,6 +48,10 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
+
+	a.scheduler.AddFunc(schedule.EntryID(project.ID), "@every 5s", func(id schedule.EntryID) {
+		a.Printf(r.Context(), "every 5s %d\n", id)
+	})
 
 	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, project)
