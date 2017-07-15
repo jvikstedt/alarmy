@@ -26,7 +26,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := setupServer()
+		port := os.Getenv("ALARMY_PORT")
+		if port == "" {
+			port = "8080"
+		}
+
+		err := setupServer(":" + port)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -34,7 +39,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func setupServer() error {
+func setupServer(addr string) error {
 	// Store / Database Setup
 	boltStore, err := store.NewBoltStore("alarmy_dev.db")
 	if err != nil {
@@ -61,7 +66,7 @@ func setupServer() error {
 	if err != nil {
 		return err
 	}
-	s := http.Server{Addr: ":8080", Handler: handler}
+	s := http.Server{Addr: addr, Handler: handler}
 
 	// Signalling
 	stop := make(chan os.Signal, 1)
@@ -78,6 +83,7 @@ func setupServer() error {
 	}()
 
 	// Server startup
+	printf(logger, "Listening on %s\n", addr)
 	if err := s.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			logger.Println(err)
@@ -87,6 +93,13 @@ func setupServer() error {
 	}
 
 	return nil
+}
+
+func printf(logger *log.Logger, format string, v ...interface{}) {
+	if logger != nil {
+		logger.Printf(format, v...)
+	}
+	fmt.Printf(format, v...)
 }
 
 func init() {
