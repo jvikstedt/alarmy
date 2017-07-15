@@ -47,6 +47,11 @@ func (s byTime) Less(i, j int) bool {
 	return s[i].next.Before(s[j].next)
 }
 
+func (c *CronScheduler) ValidateSpec(spec string) error {
+	_, err := cron.Parse(spec)
+	return err
+}
+
 func (c *CronScheduler) AddFunc(id EntryID, spec string, cmd func(id EntryID)) error {
 	schedule, err := cron.Parse(spec)
 	if err != nil {

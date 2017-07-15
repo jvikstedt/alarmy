@@ -6,6 +6,7 @@ type Job struct {
 	ID        int       `json:"id" transform:"lock"`
 	Name      string    `json:"name"`
 	ProjectID int       `json:"project_id"`
+	Spec      string    `json:"spec"`
 	CreatedAt time.Time `json:"created_at" transform:"lock"`
 	UpdatedAt time.Time `json:"updated_at" transform:"lock"`
 }

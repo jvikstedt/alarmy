@@ -19,17 +19,17 @@ func (p *JobRequest) Bind(r *http.Request) error {
 	return nil
 }
 
-// JobAll handler for getting all projects
+// JobAll handler for getting all jobs
 func (a *Api) JobAll(w http.ResponseWriter, r *http.Request) {
-	projects, err := a.store.JobAll()
+	jobs, err := a.store.JobAll()
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
-	render.JSON(w, r, projects)
+	render.JSON(w, r, jobs)
 }
 
-// JobCreate handler for creating a project
+// JobCreate handler for creating a job
 func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 	data := &JobRequest{}
 	err := render.Bind(r, data)
@@ -37,50 +37,59 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errors := data.Job.Errors(); len(errors) > 0 {
+	// Validations
+	errors := data.Job.Errors()
+
+	// Validate spec
+	if err := a.scheduler.ValidateSpec(data.Job.Spec); err != nil {
+		errors["spec"] = append(errors["spec"], err.Error())
+	}
+
+	if len(errors) > 0 {
 		a.Printf(r.Context(), "%v", errors)
-		render.Status(r, http.StatusUnprocessableEntity)
+		http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 		render.JSON(w, r, errors)
 		return
 	}
 
-	project, err := a.store.JobCreate(data.Job)
+	job, err := a.store.JobCreate(data.Job)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
-	a.scheduler.AddFunc(schedule.EntryID(project.ID), "@every 5s", func(id schedule.EntryID) {
-		a.Printf(r.Context(), "every 5s %d\n", id)
+	// Start scheduled job
+	a.scheduler.AddFunc(schedule.EntryID(job.ID), job.Spec, func(id schedule.EntryID) {
+		a.Printf(r.Context(), "executed %d\n", id)
 	})
 
 	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, project)
+	render.JSON(w, r, job)
 }
 
-// JobGetOne handler to get single project by id
+// JobGetOne handler to get single job by id
 func (a *Api) JobGetOne(w http.ResponseWriter, r *http.Request) {
-	projectID, err := a.URLParamInt(r, "projectID")
+	jobID, err := a.URLParamInt(r, "jobID")
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
-	project, err := a.store.JobGetOne(projectID)
+	job, err := a.store.JobGetOne(jobID)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, project)
+	render.JSON(w, r, job)
 }
 
-// JobDestroy delete a single project by id
+// JobDestroy delete a single job by id
 func (a *Api) JobDestroy(w http.ResponseWriter, r *http.Request) {
-	projectID, err := a.URLParamInt(r, "projectID")
+	jobID, err := a.URLParamInt(r, "jobID")
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
-	err = a.store.JobDestroy(projectID)
+	err = a.store.JobDestroy(jobID)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -88,9 +97,9 @@ func (a *Api) JobDestroy(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusOK)
 }
 
-// JobUpdate update a project by id
+// JobUpdate update a job by id
 func (a *Api) JobUpdate(w http.ResponseWriter, r *http.Request) {
-	projectID, err := a.URLParamInt(r, "projectID")
+	jobID, err := a.URLParamInt(r, "jobID")
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -100,7 +109,7 @@ func (a *Api) JobUpdate(w http.ResponseWriter, r *http.Request) {
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
-	data.Job.ID = projectID
+	data.Job.ID = jobID
 
 	if errors := data.Job.Errors(); len(errors) > 0 {
 		a.HandleError(w, r, errors, http.StatusUnprocessableEntity)
@@ -108,11 +117,11 @@ func (a *Api) JobUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := a.store.JobUpdate(data.Job)
+	job, err := a.store.JobUpdate(data.Job)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, project)
+	render.JSON(w, r, job)
 }
