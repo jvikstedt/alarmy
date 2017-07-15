@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/jvikstedt/alarmy/api"
+	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
 )
 
@@ -27,8 +28,10 @@ func setup() {
 		ProjectStore: mockStore,
 	}
 
+	mockScheduler := &schedule.MockScheduler{}
+
 	logger := log.New(logs, "", log.LstdFlags)
-	api := api.NewApi(store, logger)
+	api := api.NewApi(store, logger, mockScheduler)
 
 	var err error
 	handler, err = api.Handler()

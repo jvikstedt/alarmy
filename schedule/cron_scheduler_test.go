@@ -1,7 +1,9 @@
 package schedule_test
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -9,8 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var logs = &bytes.Buffer{}
+
 func TestAddFunc(t *testing.T) {
-	scheduler := schedule.NewCronScheduler()
+	logger := log.New(logs, "", log.LstdFlags)
+
+	scheduler := schedule.NewCronScheduler(logger)
 	go scheduler.Start()
 	defer scheduler.Stop()
 
