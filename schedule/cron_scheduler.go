@@ -96,6 +96,10 @@ func (c *CronScheduler) checker() {
 	}
 }
 
+func (c *CronScheduler) RemoveEntry(id EntryID) {
+	c.remove <- id
+}
+
 func (c *CronScheduler) removeEntryByID(id EntryID) {
 	found := false
 	foundID := 0
