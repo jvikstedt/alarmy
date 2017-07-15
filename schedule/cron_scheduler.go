@@ -79,10 +79,16 @@ Loop:
 			c.checker()
 		}
 	}
+
+	c.stop <- struct{}{}
 }
 
+// Stop stops CronScheduler
+// Start should always be called before this
+// Blocks until it really stops
 func (c *CronScheduler) Stop() {
 	c.stop <- struct{}{}
+	<-c.stop
 }
 
 func (c *CronScheduler) checker() {
