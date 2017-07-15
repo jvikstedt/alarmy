@@ -26,61 +26,67 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Store / Database Setup
-		boltStore, err := store.NewBoltStore("alarmy_dev.db")
+		err := setupServer()
 		if err != nil {
-			printAndExitError(err, nil)
-		}
-		defer boltStore.Close()
-
-		// Logger setup
-		f, err := os.OpenFile("dev.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			printAndExitError(err, nil)
-		}
-		defer f.Close()
-		logger := log.New(f, "", log.LstdFlags)
-
-		// Scheduler setup
-		scheduler := schedule.NewCronScheduler(logger)
-		go scheduler.Start()
-		defer scheduler.Stop()
-
-		// Server & http.Handler setup
-		api := api.NewApi(boltStore.Store(), logger, scheduler)
-		handler, err := api.Handler()
-		if err != nil {
-			printAndExitError(err, logger)
-		}
-		s := http.Server{Addr: ":8080", Handler: handler}
-
-		// Signalling
-		stop := make(chan os.Signal, 1)
-		signal.Notify(stop, os.Interrupt)
-
-		go func() {
-			<-stop
-
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
-			// Shutdown server gracefully
-			s.Shutdown(ctx)
-		}()
-
-		// Server startup
-		if err := s.ListenAndServe(); err != nil {
-			printAndExitError(err, logger)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 	},
 }
 
-func printAndExitError(a interface{}, logger *log.Logger) {
-	if logger != nil {
-		logger.Println(a)
+func setupServer() error {
+	// Store / Database Setup
+	boltStore, err := store.NewBoltStore("alarmy_dev.db")
+	if err != nil {
+		return err
 	}
-	fmt.Println(a)
-	os.Exit(1)
+	defer boltStore.Close()
+
+	// Logger setup
+	f, err := os.OpenFile("dev.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	logger := log.New(f, "", log.LstdFlags)
+
+	// Scheduler setup
+	scheduler := schedule.NewCronScheduler(logger)
+	go scheduler.Start()
+	defer scheduler.Stop()
+
+	// Server & http.Handler setup
+	api := api.NewApi(boltStore.Store(), logger, scheduler)
+	handler, err := api.Handler()
+	if err != nil {
+		return err
+	}
+	s := http.Server{Addr: ":8080", Handler: handler}
+
+	// Signalling
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	go func() {
+		<-stop
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Shutdown server gracefully
+		s.Shutdown(ctx)
+	}()
+
+	// Server startup
+	if err := s.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			logger.Println(err)
+		} else {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func init() {
