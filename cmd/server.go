@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/jvikstedt/alarmy/api"
 	"github.com/jvikstedt/alarmy/schedule"
@@ -48,7 +51,20 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
-		if err := http.ListenAndServe(":8080", handler); err != nil {
+		stop := make(chan os.Signal, 1)
+		signal.Notify(stop, os.Interrupt)
+
+		s := http.Server{Addr: ":8080", Handler: handler}
+
+		go func() {
+			<-stop
+
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			s.Shutdown(ctx)
+		}()
+
+		if err := s.ListenAndServe(); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
