@@ -11,6 +11,7 @@ import (
 type CronScheduler struct {
 	stop    chan struct{}
 	add     chan *Entry
+	update  chan *Entry
 	remove  chan EntryID
 	entries []*Entry
 	logger  *log.Logger
@@ -20,6 +21,7 @@ func NewCronScheduler(logger *log.Logger) *CronScheduler {
 	return &CronScheduler{
 		stop:    make(chan struct{}),
 		add:     make(chan *Entry, 10),
+		update:  make(chan *Entry, 10),
 		remove:  make(chan EntryID, 10),
 		entries: []*Entry{},
 		logger:  logger,
@@ -52,7 +54,7 @@ func (c *CronScheduler) ValidateSpec(spec string) error {
 	return err
 }
 
-func (c *CronScheduler) AddFunc(id EntryID, spec string, cmd func(id EntryID)) error {
+func (c *CronScheduler) AddEntry(id EntryID, spec string, cmd func(id EntryID)) error {
 	schedule, err := cron.Parse(spec)
 	if err != nil {
 		return err
@@ -86,7 +88,7 @@ Loop:
 		case <-c.stop:
 			break Loop
 		case e := <-c.add:
-			c.entries = append(c.entries, e)
+			c.updateOrAddEntry(e)
 		case id := <-c.remove:
 			c.removeEntryByID(id)
 		case <-nextCh:
@@ -95,6 +97,16 @@ Loop:
 	}
 
 	c.stop <- struct{}{}
+}
+
+func (c *CronScheduler) updateOrAddEntry(entry *Entry) {
+	for i, e := range c.entries {
+		if entry.id == e.id {
+			c.entries[i] = entry
+			return
+		}
+	}
+	c.entries = append(c.entries, entry)
 }
 
 // Stop stops CronScheduler

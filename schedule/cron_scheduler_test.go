@@ -13,7 +13,7 @@ import (
 
 var logs = &bytes.Buffer{}
 
-func TestAddFunc(t *testing.T) {
+func TestAddEntry(t *testing.T) {
 	logger := log.New(logs, "", log.LstdFlags)
 
 	scheduler := schedule.NewCronScheduler(logger)
@@ -30,7 +30,7 @@ func TestAddFunc(t *testing.T) {
 		callCh <- true
 	}
 
-	scheduler.AddFunc(1, "@every 1s", callback)
+	scheduler.AddEntry(1, "@every 1s", callback)
 
 	timeout := time.After(2500 * time.Millisecond)
 

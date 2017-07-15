@@ -58,7 +58,7 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start scheduled job
-	a.scheduler.AddFunc(schedule.EntryID(job.ID), job.Spec, func(id schedule.EntryID) {
+	a.scheduler.AddEntry(schedule.EntryID(job.ID), job.Spec, func(id schedule.EntryID) {
 		a.Printf(r.Context(), "executed %d\n", id)
 	})
 
