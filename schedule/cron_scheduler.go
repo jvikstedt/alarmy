@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"log"
 	"sort"
 	"time"
 
@@ -12,14 +13,16 @@ type CronScheduler struct {
 	add     chan *Entry
 	remove  chan EntryID
 	entries []*Entry
+	logger  *log.Logger
 }
 
-func NewCronScheduler() *CronScheduler {
+func NewCronScheduler(logger *log.Logger) *CronScheduler {
 	return &CronScheduler{
 		stop:    make(chan struct{}),
 		add:     make(chan *Entry, 10),
 		remove:  make(chan EntryID, 10),
 		entries: []*Entry{},
+		logger:  logger,
 	}
 }
 
@@ -95,11 +98,20 @@ func (c *CronScheduler) checker() {
 	now := time.Now()
 	for _, e := range c.entries {
 		if e.next.After(now) || e.next.IsZero() {
-			break
+			continue
 		}
-		go e.cmd(e.id)
+		go c.execute(e)
 		e.next = e.schedule.Next(now)
 	}
+}
+
+func (c *CronScheduler) execute(e *Entry) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.logger.Printf("Entry with id of %d failed due to: %v", e.id, r)
+		}
+	}()
+	e.cmd(e.id)
 }
 
 func (c *CronScheduler) RemoveEntry(id EntryID) {

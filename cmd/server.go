@@ -42,7 +42,7 @@ to quickly create a Cobra application.`,
 		logger := log.New(f, "", log.LstdFlags)
 
 		// Scheduler setup
-		scheduler := schedule.NewCronScheduler()
+		scheduler := schedule.NewCronScheduler(logger)
 		go scheduler.Start()
 		defer scheduler.Stop()
 
