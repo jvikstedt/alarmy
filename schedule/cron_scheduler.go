@@ -74,7 +74,13 @@ func (c *CronScheduler) AddFunc(id EntryID, spec string, cmd func(id EntryID)) e
 func (c *CronScheduler) Start() {
 Loop:
 	for {
-		sort.Sort(byTime(c.entries))
+		nextCh := make(<-chan time.Time)
+		if len(c.entries) > 0 {
+			sort.Sort(byTime(c.entries))
+			c.checker()
+			durationTillNext := time.Until(c.entries[0].next)
+			nextCh = time.After(durationTillNext)
+		}
 
 		select {
 		case <-c.stop:
@@ -83,8 +89,8 @@ Loop:
 			c.entries = append(c.entries, e)
 		case id := <-c.remove:
 			c.removeEntryByID(id)
-		default:
-			c.checker()
+		case <-nextCh:
+			continue Loop
 		}
 	}
 
