@@ -5,11 +5,11 @@ import (
 )
 
 type Project struct {
-	ID         int       `json:"id" transform:"lock"`
+	ID         int       `json:"id"`
 	Name       string    `json:"name"`
 	ProjectIDs []int     `json:"project_ids"`
-	CreatedAt  time.Time `json:"created_at" transform:"lock"`
-	UpdatedAt  time.Time `json:"updated_at" transform:"lock"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func (p Project) Errors() map[string][]string {
