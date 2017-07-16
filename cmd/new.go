@@ -14,34 +14,32 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"os"
 
+	"github.com/jvikstedt/alarmy/edit"
 	"github.com/jvikstedt/alarmy/model"
 	"github.com/jvikstedt/alarmy/service"
-	"github.com/jvikstedt/alarmy/transform"
 	"github.com/spf13/cobra"
 )
 
 type Resource struct {
-	Object  interface{}
-	Objects interface{}
-	Path    string
+	Path   string
+	Fields []edit.Field
+	New    func() interface{}
 }
 
 var resources = map[string]Resource{
-	"project": Resource{Object: &model.Project{}, Objects: &[]model.Project{}, Path: "projects"},
-	"job":     Resource{Object: &model.Job{}, Objects: &[]model.Job{}, Path: "jobs"},
-}
-
-func resourceByKey(key string) (Resource, error) {
-	resource, ok := resources[key]
-
-	if !ok {
-		return Resource{}, fmt.Errorf("object %s not found", key)
-	}
-
-	return resource, nil
+	"job": Resource{
+		Path: "jobs",
+		Fields: []edit.Field{
+			edit.Field{Name: "Name", Kind: edit.String},
+			edit.Field{Name: "ProjectID", Kind: edit.Int},
+			edit.Field{Name: "Spec", Kind: edit.String},
+			edit.Field{Name: "Active", Kind: edit.Bool},
+		},
+		New: func() interface{} { return &model.Job{} },
+	},
 }
 
 // newCmd represents the new command
@@ -57,35 +55,52 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		resource, err := resourceByKey(key)
+		err := runNewCmd(key)
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
-
-		err = transform.Modify(resource.Object)
-		if err != nil {
-			panic(err)
-		}
-
-		pjson, err := json.MarshalIndent(resource.Object, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(pjson))
-
-		fmt.Println("Saving...")
-
-		err = service.PostAsJSON(resource.Path, resource.Object)
-		if err != nil {
-			panic(err)
-		}
-
-		pjson, err = json.MarshalIndent(resource.Object, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(pjson))
 	},
+}
+
+func runNewCmd(resourceKey string) error {
+	resource, err := resourceByKey(resourceKey)
+	if err != nil {
+		return err
+	}
+
+	object := resource.New()
+
+	fmt.Printf("New resource %s\n", resourceKey)
+	for _, f := range resource.Fields {
+		err := edit.EditObjectField(object, f)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = service.PostAsJSON(resource.Path, object)
+	if err != nil {
+		return err
+	}
+
+	pretty, err := edit.ObjectPrettyFormat(object)
+	if err != nil {
+		return err
+	}
+	fmt.Println(pretty)
+
+	return nil
+}
+
+func resourceByKey(key string) (Resource, error) {
+	resource, ok := resources[key]
+
+	if !ok {
+		return Resource{}, fmt.Errorf("object %s not found", key)
+	}
+
+	return resource, nil
 }
 
 func init() {
