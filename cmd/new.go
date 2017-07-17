@@ -30,6 +30,13 @@ type Resource struct {
 }
 
 var resources = map[string]Resource{
+	"project": Resource{
+		Path: "projects",
+		Fields: []edit.Field{
+			edit.Field{Name: "Name", Kind: edit.String},
+		},
+		New: func() interface{} { return &model.Project{} },
+	},
 	"job": Resource{
 		Path: "jobs",
 		Fields: []edit.Field{
