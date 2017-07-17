@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"os/user"
+	"path/filepath"
 	"time"
 
 	"github.com/jvikstedt/alarmy/api"
@@ -40,15 +42,21 @@ to quickly create a Cobra application.`,
 }
 
 func setupServer(addr string) error {
+	// Find out root directory for everything app related
+	rootDir, err := getRootDir()
+	if err != nil {
+		return err
+	}
+
 	// Store / Database Setup
-	boltStore, err := store.NewBoltStore("alarmy_dev.db")
+	boltStore, err := store.NewBoltStore(filepath.Join(rootDir, "alarmy.db"))
 	if err != nil {
 		return err
 	}
 	defer boltStore.Close()
 
 	// Logger setup
-	f, err := os.OpenFile("dev.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(filepath.Join(rootDir, "dev.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
@@ -93,6 +101,20 @@ func setupServer(addr string) error {
 	}
 
 	return nil
+}
+
+func getRootDir() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	homeDir := usr.HomeDir
+
+	rootDir := filepath.Join(homeDir, ".alarmy")
+	os.MkdirAll(rootDir, os.ModePerm)
+
+	return rootDir, nil
 }
 
 func printf(logger *log.Logger, format string, v ...interface{}) {
