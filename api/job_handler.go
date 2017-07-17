@@ -41,7 +41,7 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 	errors := data.Job.Errors()
 
 	// Validate spec
-	if err := a.scheduler.ValidateSpec(data.Job.Spec); err != nil {
+	if err := a.scheduler.ValidateSpec(data.Job.Spec); data.Job.Active && err != nil {
 		errors["spec"] = append(errors["spec"], err.Error())
 	}
 
