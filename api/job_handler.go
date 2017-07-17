@@ -40,6 +40,11 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 	// Validations
 	errors := data.Job.Errors()
 
+	_, err = a.store.ProjectGetOne(data.Job.ProjectID)
+	if err != nil {
+		errors["project_id"] = append(errors["project_id"], err.Error())
+	}
+
 	// Validate spec
 	if err := a.scheduler.ValidateSpec(data.Job.Spec); data.Job.Active && err != nil {
 		errors["spec"] = append(errors["spec"], err.Error())
