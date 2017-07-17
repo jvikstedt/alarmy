@@ -56,7 +56,7 @@ func setupServer(addr string) error {
 	defer boltStore.Close()
 
 	// Logger setup
-	f, err := os.OpenFile(filepath.Join(rootDir, "dev.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(filepath.Join(rootDir, "server.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
