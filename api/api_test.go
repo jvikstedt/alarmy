@@ -12,30 +12,24 @@ import (
 	"github.com/jvikstedt/alarmy/store"
 )
 
-var handler http.Handler
-var mockStore *store.MockStore
-var logs = &bytes.Buffer{}
-
 func TestMain(m *testing.M) {
-	setup()
 	retCode := m.Run()
 	os.Exit(retCode)
 }
 
-func setup() {
-	mockStore = &store.MockStore{}
-	store := store.Store{
-		ProjectStore: mockStore,
-	}
-
+func testDependencies() (http.Handler, *store.MockStore, *bytes.Buffer) {
+	mockStore := store.NewMockStore()
 	mockScheduler := &schedule.MockScheduler{}
 
+	logs := &bytes.Buffer{}
 	logger := log.New(logs, "", log.LstdFlags)
-	api := api.NewApi(store, logger, mockScheduler)
+	api := api.NewApi(mockStore, logger, mockScheduler)
 
 	var err error
-	handler, err = api.Handler()
+	handler, err := api.Handler()
 	if err != nil {
 		panic(err)
 	}
+
+	return handler, mockStore, logs
 }

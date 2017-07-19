@@ -20,7 +20,7 @@ func NewBoltJobStore(bs *BoltStore) *BoltJobStore {
 	}
 }
 
-func (s *BoltJobStore) JobAll() ([]model.Job, error) {
+func (s *BoltJobStore) All() ([]model.Job, error) {
 	projects := []model.Job{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyJobs)
@@ -40,7 +40,7 @@ func (s *BoltJobStore) JobAll() ([]model.Job, error) {
 	return projects, err
 }
 
-func (s *BoltJobStore) JobCreate(project model.Job) (model.Job, error) {
+func (s *BoltJobStore) Create(project model.Job) (model.Job, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyJobs)
 
@@ -60,7 +60,7 @@ func (s *BoltJobStore) JobCreate(project model.Job) (model.Job, error) {
 	return project, err
 }
 
-func (s *BoltJobStore) JobUpdate(project model.Job) (model.Job, error) {
+func (s *BoltJobStore) Update(project model.Job) (model.Job, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyJobs)
 
@@ -78,7 +78,7 @@ func (s *BoltJobStore) JobUpdate(project model.Job) (model.Job, error) {
 	return project, err
 }
 
-func (s *BoltJobStore) JobDestroy(id int) error {
+func (s *BoltJobStore) Destroy(id int) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyJobs)
 
@@ -86,7 +86,7 @@ func (s *BoltJobStore) JobDestroy(id int) error {
 	})
 }
 
-func (s *BoltJobStore) JobGetOne(id int) (model.Job, error) {
+func (s *BoltJobStore) GetOne(id int) (model.Job, error) {
 	project := model.Job{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyJobs)
@@ -100,6 +100,6 @@ func (s *BoltJobStore) JobGetOne(id int) (model.Job, error) {
 	return project, err
 }
 
-func (s *BoltJobStore) JobRemoveAll() error {
+func (s *BoltJobStore) RemoveAll() error {
 	return s.RecreateBuckets(BucketKeyJobs)
 }

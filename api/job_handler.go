@@ -21,7 +21,7 @@ func (p *JobRequest) Bind(r *http.Request) error {
 
 // JobAll handler for getting all jobs
 func (a *Api) JobAll(w http.ResponseWriter, r *http.Request) {
-	jobs, err := a.store.JobAll()
+	jobs, err := a.store.Job().All()
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -40,7 +40,7 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 	// Validations
 	errors := data.Job.Errors()
 
-	_, err = a.store.ProjectGetOne(data.Job.ProjectID)
+	_, err = a.store.Project().GetOne(data.Job.ProjectID)
 	if err != nil {
 		errors["project_id"] = append(errors["project_id"], err.Error())
 	}
@@ -57,7 +57,7 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job, err := a.store.JobCreate(data.Job)
+	job, err := a.store.Job().Create(data.Job)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -80,7 +80,7 @@ func (a *Api) JobGetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job, err := a.store.JobGetOne(jobID)
+	job, err := a.store.Job().GetOne(jobID)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -96,7 +96,7 @@ func (a *Api) JobDestroy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.store.JobDestroy(jobID)
+	err = a.store.Job().Destroy(jobID)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -124,7 +124,7 @@ func (a *Api) JobUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job, err := a.store.JobUpdate(data.Job)
+	job, err := a.store.Job().Update(data.Job)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}

@@ -23,13 +23,14 @@ var testProjects = []model.Project{
 }
 
 func TestProjectAll(t *testing.T) {
+	handler, mockStore, _ := testDependencies()
 	req, _ := http.NewRequest("GET", "/projects", nil)
 
 	for i := 0; i < len(testProjects)+1; i++ {
 		rr := httptest.NewRecorder()
 
 		// Setup mockStore properly
-		mockStore.Project.ProjectAll.Returns.Projects = testProjects[0:i]
+		mockStore.ProjectStore.Returns.Projects = testProjects[0:i]
 
 		// Make a request
 		handler.ServeHTTP(rr, req)
@@ -50,13 +51,14 @@ func TestProjectAll(t *testing.T) {
 	}
 
 	// Error case
-	mockStore.Project.ProjectAll.Returns.Error = fmt.Errorf("Any error")
+	mockStore.ProjectStore.Returns.Error = fmt.Errorf("Any error")
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusInternalServerError, rr.Code, "status code")
 }
 
 func TestProjectCreate(t *testing.T) {
+	handler, mockStore, _ := testDependencies()
 	b := bytes.NewBufferString(`{"Name": "Golang"}`)
 	req, _ := http.NewRequest("POST", "/projects", b)
 	req.Header.Add("Content-Type", "application/json")
@@ -65,12 +67,12 @@ func TestProjectCreate(t *testing.T) {
 
 	// Setup mock
 	testProject := model.Project{ID: 1, Name: "Golang", CreatedAt: time.Now(), UpdatedAt: time.Now()}
-	mockStore.Project.ProjectCreate.Returns.Project = testProject
+	mockStore.ProjectStore.Returns.Project = testProject
 
 	handler.ServeHTTP(rr, req)
 
 	// Make sure mock receives correct object with correct information
-	assert.Equal(t, mockStore.Project.ProjectCreate.Receives.Project.Name, "Golang", "project name")
+	assert.Equal(t, mockStore.ProjectStore.Receives.Project.Name, "Golang", "project name")
 
 	project := readProject(t, rr.Body)
 
@@ -91,15 +93,16 @@ func TestProjectCreate(t *testing.T) {
 }
 
 func TestProjectGetOne(t *testing.T) {
+	handler, mockStore, _ := testDependencies()
 	for i, p := range testProjects {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/projects/%d", i+1), nil)
 		rr := httptest.NewRecorder()
 
-		mockStore.Project.ProjectGetOne.Returns.Project = p
+		mockStore.ProjectStore.Returns.Project = p
 		handler.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusOK, rr.Code, "status code")
-		assert.Equal(t, p.ID, mockStore.Project.ProjectGetOne.Receives.ID)
+		assert.Equal(t, p.ID, mockStore.ProjectStore.Receives.ID)
 		project := readProject(t, rr.Body)
 		assert.Equal(t, p.ID, project.ID, "project id")
 		assert.Equal(t, p.Name, project.Name, "project name")
@@ -109,13 +112,14 @@ func TestProjectGetOne(t *testing.T) {
 }
 
 func TestProjectDestroy(t *testing.T) {
+	handler, mockStore, _ := testDependencies()
 	// Happy case
 	req, _ := http.NewRequest("DELETE", "/projects/1", nil)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code, "status code")
-	assert.Equal(t, 1, mockStore.Project.ProjectDestroy.Receives.ID, "project id")
+	assert.Equal(t, 1, mockStore.ProjectStore.Receives.ID, "project id")
 
 	// invalid id provided
 	req, _ = http.NewRequest("DELETE", "/projects/asddsa", nil)
@@ -125,7 +129,7 @@ func TestProjectDestroy(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, rr.Code, "status code")
 
 	// DB returns an error
-	mockStore.Project.ProjectDestroy.Returns.Error = fmt.Errorf("any error")
+	mockStore.ProjectStore.Returns.Error = fmt.Errorf("any error")
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
@@ -149,6 +153,7 @@ func readProject(t *testing.T, r io.Reader) model.Project {
 }
 
 func TestProjectUpdate(t *testing.T) {
+	handler, mockStore, _ := testDependencies()
 	// Happy case
 	b := bytes.NewBufferString(`{"Name": "Test"}`)
 
@@ -158,8 +163,8 @@ func TestProjectUpdate(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code, "status code")
-	assert.Equal(t, "Test", mockStore.Project.ProjectUpdate.Receives.Project.Name)
-	assert.Equal(t, 1, mockStore.Project.ProjectUpdate.Receives.Project.ID)
+	assert.Equal(t, "Test", mockStore.ProjectStore.Receives.Project.Name)
+	assert.Equal(t, 1, mockStore.ProjectStore.Receives.Project.ID)
 
 	// Invalid name
 	b = bytes.NewBufferString(`{"Name": ""}`)
@@ -167,11 +172,11 @@ func TestProjectUpdate(t *testing.T) {
 	req, _ = http.NewRequest("PATCH", "/projects/1", b)
 	req.Header.Add("Content-Type", "application/json")
 	rr = httptest.NewRecorder()
-	mockStore.Project.ProjectUpdate.CallCount = 0
+	mockStore.ProjectStore.CallCount = 0
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code, "status code")
-	assert.Equal(t, 0, mockStore.Project.ProjectUpdate.CallCount, "store should not be called")
+	assert.Equal(t, 0, mockStore.ProjectStore.CallCount, "store should not be called")
 }
 
 // readProjects is a helper function to read array of projects from the body
