@@ -69,7 +69,7 @@ func setupServer(addr string) error {
 	defer scheduler.Stop()
 
 	// Server & http.Handler setup
-	api := api.NewApi(boltStore.Store(), logger, scheduler)
+	api := api.NewApi(boltStore, logger, scheduler)
 	handler, err := api.Handler()
 	if err != nil {
 		return err

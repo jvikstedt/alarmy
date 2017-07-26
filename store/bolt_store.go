@@ -12,7 +12,9 @@ var Buckets = [][]byte{
 }
 
 type BoltStore struct {
-	db *bolt.DB
+	db      *bolt.DB
+	project ProjectStore
+	job     JobStore
 }
 
 func NewBoltStore(filename string) (*BoltStore, error) {
@@ -24,6 +26,8 @@ func NewBoltStore(filename string) (*BoltStore, error) {
 	store := &BoltStore{
 		db: db,
 	}
+	store.project = NewBoltProjectStore(store)
+	store.job = NewBoltJobStore(store)
 
 	err = store.EnsureTablesExist()
 	if err != nil {
@@ -31,6 +35,14 @@ func NewBoltStore(filename string) (*BoltStore, error) {
 	}
 
 	return store, nil
+}
+
+func (s *BoltStore) Project() ProjectStore {
+	return s.project
+}
+
+func (s *BoltStore) Job() JobStore {
+	return s.job
 }
 
 func (s *BoltStore) EnsureTablesExist() error {
@@ -66,11 +78,4 @@ func (s *BoltStore) RecreateBuckets(names ...[]byte) error {
 
 func (s *BoltStore) Close() error {
 	return s.db.Close()
-}
-
-func (s *BoltStore) Store() Store {
-	return Store{
-		ProjectStore: NewBoltProjectStore(s),
-		JobStore:     NewBoltJobStore(s),
-	}
 }

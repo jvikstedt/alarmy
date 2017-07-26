@@ -9,24 +9,24 @@ import (
 )
 
 func TestProjectAll(t *testing.T) {
-	currentStore.ProjectRemoveAll()
+	currentStore.Project().RemoveAll()
 
 	// Zero projects
-	projects, err := currentStore.ProjectAll()
+	projects, err := currentStore.Project().All()
 	assert.Nil(t, err, "project all should not return an error")
 	assert.Equal(t, 0, len(projects), "should be 0 projects")
 
 	project := model.Project{Name: "Golang"}
-	currentStore.ProjectCreate(project)
+	currentStore.Project().Create(project)
 
 	// One project
-	projects, err = currentStore.ProjectAll()
+	projects, err = currentStore.Project().All()
 	assert.Nil(t, err, "project all should not return an error")
 	assert.Equal(t, 1, len(projects), "should be 1 project")
 }
 
 func TestProjectCreate(t *testing.T) {
-	currentStore.ProjectRemoveAll()
+	currentStore.Project().RemoveAll()
 
 	testProjects := []model.Project{
 		model.Project{Name: "Golang"},
@@ -35,7 +35,7 @@ func TestProjectCreate(t *testing.T) {
 	}
 
 	for i, p := range testProjects {
-		project, err := currentStore.ProjectCreate(p)
+		project, err := currentStore.Project().Create(p)
 
 		assert.Nil(t, err, "ProjectCreate should not return an error")
 		assert.Equal(t, i+1, project.ID, "id should be the same")
@@ -48,33 +48,33 @@ func TestProjectCreate(t *testing.T) {
 }
 
 func TestProjectUpdate(t *testing.T) {
-	project, _ := currentStore.ProjectCreate(model.Project{Name: "Javascript"})
+	project, _ := currentStore.Project().Create(model.Project{Name: "Javascript"})
 	project.Name = "Golang"
 
-	testProject, err := currentStore.ProjectUpdate(project)
+	testProject, err := currentStore.Project().Update(project)
 	assert.Nil(t, err, "ProjectUpdate should not return an error")
 	assert.Equal(t, project.Name, testProject.Name, "project name should be the updated one")
 
-	afterUpdateProject, _ := currentStore.ProjectGetOne(project.ID)
+	afterUpdateProject, _ := currentStore.Project().GetOne(project.ID)
 	assert.True(t, project.UpdatedAt.Before(afterUpdateProject.UpdatedAt), "UpdatedAt should be updated after project update")
 	assert.Equal(t, project.Name, afterUpdateProject.Name, "project name should be the updated one")
 }
 
 func TestProjectDestroy(t *testing.T) {
-	project, _ := currentStore.ProjectCreate(model.Project{Name: "Golang"})
+	project, _ := currentStore.Project().Create(model.Project{Name: "Golang"})
 
-	_, err := currentStore.ProjectGetOne(project.ID)
+	_, err := currentStore.Project().GetOne(project.ID)
 	assert.Nil(t, err, "project should be in the store before destroy")
-	err = currentStore.ProjectDestroy(project.ID)
+	err = currentStore.Project().Destroy(project.ID)
 	assert.Nil(t, err, "ProjectDestroy should not return an error")
-	_, err = currentStore.ProjectGetOne(project.ID)
+	_, err = currentStore.Project().GetOne(project.ID)
 	assert.Error(t, err, "project should not be in the store after destroy")
 }
 
 func TestProjectGetOne(t *testing.T) {
-	initialProject, _ := currentStore.ProjectCreate(model.Project{Name: "Golang"})
+	initialProject, _ := currentStore.Project().Create(model.Project{Name: "Golang"})
 
-	testProject, err := currentStore.ProjectGetOne(initialProject.ID)
+	testProject, err := currentStore.Project().GetOne(initialProject.ID)
 	assert.Nil(t, err, "ProjectGetOne should not return an error")
 	assert.Equal(t, initialProject.Name, testProject.Name, "ProjectGetOne should return correct project")
 }

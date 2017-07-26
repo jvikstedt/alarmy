@@ -3,81 +3,61 @@ package store
 import "github.com/jvikstedt/alarmy/model"
 
 type MockStore struct {
-	Project struct {
-		ProjectAll struct {
-			Returns struct {
-				Projects []model.Project
-				Error    error
-			}
-		}
+	ProjectStore *ProjectMockStore
+}
 
-		ProjectCreate struct {
-			Receives struct {
-				Project model.Project
-			}
-			Returns struct {
-				Project model.Project
-				Error   error
-			}
-		}
-
-		ProjectGetOne struct {
-			Receives struct {
-				ID int
-			}
-			Returns struct {
-				Project model.Project
-				Error   error
-			}
-		}
-
-		ProjectDestroy struct {
-			Receives struct {
-				ID int
-			}
-			Returns struct {
-				Error error
-			}
-		}
-
-		ProjectUpdate struct {
-			CallCount int
-			Receives  struct {
-				Project model.Project
-			}
-			Returns struct {
-				Project model.Project
-				Error   error
-			}
-		}
+type ProjectMockStore struct {
+	CallCount int
+	Returns   struct {
+		Projects []model.Project
+		Project  model.Project
+		Error    error
+	}
+	Receives struct {
+		Project model.Project
+		ID      int
 	}
 }
 
-func (s *MockStore) ProjectAll() ([]model.Project, error) {
-	return s.Project.ProjectAll.Returns.Projects, s.Project.ProjectAll.Returns.Error
+func NewMockStore() *MockStore {
+	return &MockStore{
+		ProjectStore: &ProjectMockStore{},
+	}
 }
 
-func (s *MockStore) ProjectCreate(project model.Project) (model.Project, error) {
-	s.Project.ProjectCreate.Receives.Project = project
-	return s.Project.ProjectCreate.Returns.Project, s.Project.ProjectCreate.Returns.Error
+func (s *MockStore) Project() ProjectStore {
+	return s.ProjectStore
 }
 
-func (s *MockStore) ProjectUpdate(project model.Project) (model.Project, error) {
-	s.Project.ProjectUpdate.CallCount++
-	s.Project.ProjectUpdate.Receives.Project = project
-	return s.Project.ProjectUpdate.Returns.Project, s.Project.ProjectUpdate.Returns.Error
+func (s *MockStore) Job() JobStore {
+	return nil
 }
 
-func (s *MockStore) ProjectDestroy(id int) error {
-	s.Project.ProjectDestroy.Receives.ID = id
-	return s.Project.ProjectDestroy.Returns.Error
+func (s *ProjectMockStore) All() ([]model.Project, error) {
+	return s.Returns.Projects, s.Returns.Error
 }
 
-func (s *MockStore) ProjectGetOne(id int) (model.Project, error) {
-	s.Project.ProjectGetOne.Receives.ID = id
-	return s.Project.ProjectGetOne.Returns.Project, s.Project.ProjectGetOne.Returns.Error
+func (s *ProjectMockStore) Create(project model.Project) (model.Project, error) {
+	s.Receives.Project = project
+	return s.Returns.Project, s.Returns.Error
 }
 
-func (s *MockStore) ProjectRemoveAll() error {
+func (s *ProjectMockStore) Update(project model.Project) (model.Project, error) {
+	s.CallCount++
+	s.Receives.Project = project
+	return s.Returns.Project, s.Returns.Error
+}
+
+func (s *ProjectMockStore) Destroy(id int) error {
+	s.Receives.ID = id
+	return s.Returns.Error
+}
+
+func (s *ProjectMockStore) GetOne(id int) (model.Project, error) {
+	s.Receives.ID = id
+	return s.Returns.Project, s.Returns.Error
+}
+
+func (s *ProjectMockStore) RemoveAll() error {
 	return nil
 }

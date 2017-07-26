@@ -20,7 +20,7 @@ func NewBoltProjectStore(bs *BoltStore) *BoltProjectStore {
 	}
 }
 
-func (s *BoltProjectStore) ProjectAll() ([]model.Project, error) {
+func (s *BoltProjectStore) All() ([]model.Project, error) {
 	projects := []model.Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
@@ -40,7 +40,7 @@ func (s *BoltProjectStore) ProjectAll() ([]model.Project, error) {
 	return projects, err
 }
 
-func (s *BoltProjectStore) ProjectCreate(project model.Project) (model.Project, error) {
+func (s *BoltProjectStore) Create(project model.Project) (model.Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -60,7 +60,7 @@ func (s *BoltProjectStore) ProjectCreate(project model.Project) (model.Project, 
 	return project, err
 }
 
-func (s *BoltProjectStore) ProjectUpdate(project model.Project) (model.Project, error) {
+func (s *BoltProjectStore) Update(project model.Project) (model.Project, error) {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -78,7 +78,7 @@ func (s *BoltProjectStore) ProjectUpdate(project model.Project) (model.Project, 
 	return project, err
 }
 
-func (s *BoltProjectStore) ProjectDestroy(id int) error {
+func (s *BoltProjectStore) Destroy(id int) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
 
@@ -86,7 +86,7 @@ func (s *BoltProjectStore) ProjectDestroy(id int) error {
 	})
 }
 
-func (s *BoltProjectStore) ProjectGetOne(id int) (model.Project, error) {
+func (s *BoltProjectStore) GetOne(id int) (model.Project, error) {
 	project := model.Project{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketKeyProjects)
@@ -100,6 +100,6 @@ func (s *BoltProjectStore) ProjectGetOne(id int) (model.Project, error) {
 	return project, err
 }
 
-func (s *BoltProjectStore) ProjectRemoveAll() error {
+func (s *BoltProjectStore) RemoveAll() error {
 	return s.RecreateBuckets(BucketKeyProjects)
 }

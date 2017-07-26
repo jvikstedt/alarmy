@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	stores["bolt"] = boltStore.Store()
+	stores["bolt"] = boltStore
 
 	var result int
 	for k, v := range stores {

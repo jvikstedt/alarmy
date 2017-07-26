@@ -20,7 +20,7 @@ func (p *ProjectRequest) Bind(r *http.Request) error {
 
 // ProjectAll handler for getting all projects
 func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
-	projects, err := a.store.ProjectAll()
+	projects, err := a.store.Project().All()
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -43,7 +43,7 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := a.store.ProjectCreate(data.Project)
+	project, err := a.store.Project().Create(data.Project)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -59,7 +59,7 @@ func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := a.store.ProjectGetOne(projectID)
+	project, err := a.store.Project().GetOne(projectID)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -75,7 +75,7 @@ func (a *Api) ProjectDestroy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.store.ProjectDestroy(projectID)
+	err = a.store.Project().Destroy(projectID)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -103,7 +103,7 @@ func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := a.store.ProjectUpdate(data.Project)
+	project, err := a.store.Project().Update(data.Project)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
