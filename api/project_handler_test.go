@@ -41,12 +41,9 @@ func TestProjectAll(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rr.Code, "status code")
 		assert.Equal(t, i, len(projects), "projects length")
 
-		// Go through projects and verify fields
+		// Go through projects and verify
 		for i, p := range projects {
-			assert.Equal(t, testProjects[i].ID, p.ID, "project id")
-			assert.Equal(t, testProjects[i].Name, p.Name, "project name")
-			assert.Equal(t, testProjects[i].CreatedAt, p.CreatedAt, "project CreatedAt")
-			assert.Equal(t, testProjects[i].UpdatedAt, p.UpdatedAt, "project UpdatedAt")
+			assert.Equal(t, testProjects[i], p)
 		}
 	}
 
