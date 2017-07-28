@@ -2,6 +2,20 @@ package model
 
 import "time"
 
+const (
+	TriggerEqual = iota
+	TriggerLessThan
+	TriggerMoreThan
+)
+
+type TriggerType uint8
+
+type Trigger struct {
+	FieldName string
+	Target    string
+	TriggerType
+}
+
 type Job struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
@@ -9,6 +23,7 @@ type Job struct {
 	Spec      string    `json:"spec"`
 	Cmd       string    `json:"cmd"`
 	Active    bool      `json:"active"`
+	Triggers  []Trigger `json:"triggers"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

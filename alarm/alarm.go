@@ -1,10 +1,13 @@
 package alarm
 
 import (
+	"encoding/json"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 
+	"github.com/jvikstedt/alarmy/model"
 	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
 )
@@ -35,5 +38,59 @@ func (e *Executor) Execute(entryID schedule.EntryID) {
 		return
 	}
 
+	result := make(map[string]interface{})
+	err = json.Unmarshal(out, &result)
+	if err != nil {
+		e.logger.Printf("Err unmarshalling result for job: %d err: %v", entryID, err)
+		return
+	}
+
+	job.Triggers = []model.Trigger{
+		model.Trigger{FieldName: "status", Target: "200", TriggerType: model.TriggerEqual},
+		model.Trigger{FieldName: "duration", Target: "500", TriggerType: model.TriggerMoreThan},
+	}
+
+	for _, t := range job.Triggers {
+		field := result[t.FieldName]
+		switch v := field.(type) {
+		case float64:
+			// Check if integer
+			if v == float64(int64(v)) {
+				e.handleAsInt(job, t, v)
+			}
+
+		case string:
+		case bool:
+		default:
+			e.logger.Printf("Unknown type %T for job %d\n", v, job.ID)
+		}
+	}
+
 	e.logger.Printf("Job %d finished with output %s\n", job.ID, strings.TrimSpace(string(out)))
+}
+
+func (e *Executor) handleAsInt(job model.Job, t model.Trigger, value float64) bool {
+	target, err := strconv.Atoi(t.Target)
+	if err != nil {
+		e.logger.Printf("%v", err)
+		return false
+	}
+	actual := int(value)
+
+	switch t.TriggerType {
+	case model.TriggerEqual:
+		if target != actual {
+			e.logger.Printf("Expected %d but got %d for job %s.%s\n", target, actual, job.Name, t.FieldName)
+			return true
+		}
+	case model.TriggerMoreThan:
+		if actual > target {
+			e.logger.Printf("TriggerMoreThan %d was more than %d for job %s.%s\n", actual, target, job.Name, t.FieldName)
+			return true
+		}
+	default:
+		e.logger.Printf("Invalid TriggerType %v for int type\n", t.TriggerType)
+	}
+
+	return false
 }

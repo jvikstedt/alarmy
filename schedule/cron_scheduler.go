@@ -122,15 +122,16 @@ func (c *CronScheduler) Stop() {
 func (c *CronScheduler) checker(wg *sync.WaitGroup) {
 	now := time.Now()
 	for _, e := range c.entries {
-		if e.next.After(now) || e.next.IsZero() {
+		entry := e
+		if entry.next.After(now) || entry.next.IsZero() {
 			continue
 		}
 		go func() {
 			wg.Add(1)
 			defer wg.Done()
-			c.execute(e)
+			c.execute(entry)
 		}()
-		e.next = e.schedule.Next(now)
+		entry.next = entry.schedule.Next(now)
 	}
 }
 
