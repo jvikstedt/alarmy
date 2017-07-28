@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/jvikstedt/alarmy/alarm"
 	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
 )
@@ -17,13 +18,15 @@ type Api struct {
 	store     store.Store
 	logger    *log.Logger
 	scheduler schedule.Scheduler
+	executor  alarm.Executor
 }
 
-func NewApi(store store.Store, logger *log.Logger, scheduler schedule.Scheduler) *Api {
+func NewApi(store store.Store, logger *log.Logger, scheduler schedule.Scheduler, executor alarm.Executor) *Api {
 	return &Api{
 		store:     store,
 		logger:    logger,
 		scheduler: scheduler,
+		executor:  executor,
 	}
 }
 

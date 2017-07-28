@@ -64,9 +64,7 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 
 	// Start scheduled job
 	if job.Active {
-		a.scheduler.AddEntry(schedule.EntryID(job.ID), job.Spec, func(id schedule.EntryID) {
-			a.Printf(r.Context(), "executed %d\n", id)
-		})
+		a.scheduler.AddEntry(schedule.EntryID(job.ID), job.Spec, a.executor.Execute)
 	}
 
 	render.Status(r, http.StatusCreated)

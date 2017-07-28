@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jvikstedt/alarmy/alarm"
 	"github.com/jvikstedt/alarmy/api"
 	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
@@ -23,7 +24,9 @@ func testDependencies() (http.Handler, *store.MockStore, *bytes.Buffer) {
 
 	logs := &bytes.Buffer{}
 	logger := log.New(logs, "", log.LstdFlags)
-	api := api.NewApi(mockStore, logger, mockScheduler)
+
+	executor := alarm.Executor{}
+	api := api.NewApi(mockStore, logger, mockScheduler, executor)
 
 	var err error
 	handler, err := api.Handler()

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/jvikstedt/alarmy/alarm"
 	"github.com/jvikstedt/alarmy/api"
 	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
@@ -68,8 +69,10 @@ func setupServer(addr string) error {
 	go scheduler.Start()
 	defer scheduler.Stop()
 
+	executor := alarm.Executor{}
+
 	// Server & http.Handler setup
-	api := api.NewApi(boltStore, logger, scheduler)
+	api := api.NewApi(boltStore, logger, scheduler, executor)
 	handler, err := api.Handler()
 	if err != nil {
 		return err
