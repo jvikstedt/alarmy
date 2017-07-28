@@ -3,6 +3,7 @@ package schedule
 import (
 	"log"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron"
@@ -74,12 +75,13 @@ func (c *CronScheduler) AddEntry(id EntryID, spec string, executor Executor) err
 }
 
 func (c *CronScheduler) Start() {
+	var wg sync.WaitGroup
 Loop:
 	for {
 		nextCh := make(<-chan time.Time)
 		if len(c.entries) > 0 {
+			c.checker(&wg)
 			sort.Sort(byTime(c.entries))
-			c.checker()
 			durationTillNext := time.Until(c.entries[0].next)
 			nextCh = time.After(durationTillNext)
 		}
@@ -92,10 +94,10 @@ Loop:
 		case id := <-c.remove:
 			c.removeEntryByID(id)
 		case <-nextCh:
-			continue Loop
 		}
 	}
 
+	wg.Wait()
 	c.stop <- struct{}{}
 }
 
@@ -117,13 +119,17 @@ func (c *CronScheduler) Stop() {
 	<-c.stop
 }
 
-func (c *CronScheduler) checker() {
+func (c *CronScheduler) checker(wg *sync.WaitGroup) {
 	now := time.Now()
 	for _, e := range c.entries {
 		if e.next.After(now) || e.next.IsZero() {
 			continue
 		}
-		go c.execute(e)
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			c.execute(e)
+		}()
 		e.next = e.schedule.Next(now)
 	}
 }
