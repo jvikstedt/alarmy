@@ -18,10 +18,10 @@ type Api struct {
 	store     store.Store
 	logger    *log.Logger
 	scheduler schedule.Scheduler
-	executor  alarm.Executor
+	executor  *alarm.Executor
 }
 
-func NewApi(store store.Store, logger *log.Logger, scheduler schedule.Scheduler, executor alarm.Executor) *Api {
+func NewApi(store store.Store, logger *log.Logger, scheduler schedule.Scheduler, executor *alarm.Executor) *Api {
 	return &Api{
 		store:     store,
 		logger:    logger,

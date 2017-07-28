@@ -7,6 +7,7 @@ type Job struct {
 	Name      string    `json:"name"`
 	ProjectID int       `json:"project_id"`
 	Spec      string    `json:"spec"`
+	Cmd       string    `json:"cmd"`
 	Active    bool      `json:"active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

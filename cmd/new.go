@@ -43,6 +43,7 @@ var resources = map[string]Resource{
 			edit.Field{Name: "Name", Kind: edit.String},
 			edit.Field{Name: "ProjectID", Kind: edit.Int},
 			edit.Field{Name: "Spec", Kind: edit.String},
+			edit.Field{Name: "Cmd", Kind: edit.String},
 			edit.Field{Name: "Active", Kind: edit.Bool},
 		},
 		New: func() interface{} { return &model.Job{} },

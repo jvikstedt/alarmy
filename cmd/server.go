@@ -69,7 +69,17 @@ func setupServer(addr string) error {
 	go scheduler.Start()
 	defer scheduler.Stop()
 
-	executor := alarm.Executor{}
+	executor := alarm.NewExecutor(boltStore, logger)
+
+	jobs, err := boltStore.Job().All()
+	if err != nil {
+		return err
+	}
+	for _, j := range jobs {
+		if j.Active {
+			scheduler.AddEntry(schedule.EntryID(j.ID), j.Spec, executor.Execute)
+		}
+	}
 
 	// Server & http.Handler setup
 	api := api.NewApi(boltStore, logger, scheduler, executor)

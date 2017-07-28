@@ -25,7 +25,7 @@ func testDependencies() (http.Handler, *store.MockStore, *bytes.Buffer) {
 	logs := &bytes.Buffer{}
 	logger := log.New(logs, "", log.LstdFlags)
 
-	executor := alarm.Executor{}
+	executor := alarm.NewExecutor(mockStore, logger)
 	api := api.NewApi(mockStore, logger, mockScheduler, executor)
 
 	var err error
