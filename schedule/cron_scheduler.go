@@ -32,7 +32,7 @@ type Entry struct {
 	id       EntryID
 	schedule cron.Schedule
 	next     time.Time
-	cmd      func(id EntryID)
+	executor Executor
 }
 
 type byTime []*Entry
@@ -54,7 +54,7 @@ func (c *CronScheduler) ValidateSpec(spec string) error {
 	return err
 }
 
-func (c *CronScheduler) AddEntry(id EntryID, spec string, cmd func(id EntryID)) error {
+func (c *CronScheduler) AddEntry(id EntryID, spec string, executor Executor) error {
 	schedule, err := cron.Parse(spec)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (c *CronScheduler) AddEntry(id EntryID, spec string, cmd func(id EntryID)) 
 		id:       id,
 		schedule: schedule,
 		next:     next,
-		cmd:      cmd,
+		executor: executor,
 	}
 
 	return nil
@@ -134,7 +134,7 @@ func (c *CronScheduler) execute(e *Entry) {
 			c.logger.Printf("Entry with id of %d failed due to: %v", e.id, r)
 		}
 	}()
-	e.cmd(e.id)
+	e.executor(e.id)
 }
 
 func (c *CronScheduler) RemoveEntry(id EntryID) {

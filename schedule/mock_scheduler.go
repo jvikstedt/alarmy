@@ -3,7 +3,7 @@ package schedule
 type MockScheduler struct {
 }
 
-func (s *MockScheduler) AddEntry(id EntryID, spec string, cmd func(id EntryID)) error {
+func (s *MockScheduler) AddEntry(id EntryID, spec string, executor Executor) error {
 	return nil
 }
 func (s *MockScheduler) RemoveEntry(id EntryID) {
