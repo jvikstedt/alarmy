@@ -16,6 +16,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/jvikstedt/alarmy/edit"
 	"github.com/jvikstedt/alarmy/model"
@@ -51,17 +52,73 @@ var resources = map[string]Resource{
 	},
 }
 
+var editor edit.Editor
+
 func triggersEditor(object interface{}, field edit.Field) error {
 	job, ok := object.(*model.Job)
 	if !ok {
 		return fmt.Errorf("Not a *model.Job object")
 	}
 
-	// Temporaly use these
-	job.Triggers = []model.Trigger{
-		model.Trigger{FieldName: "status", Target: "200", TriggerType: model.TriggerEqual},
-		model.Trigger{FieldName: "duration", Target: "500", TriggerType: model.TriggerMoreThan},
+	triggers := []model.Trigger{}
+
+	for {
+		fmt.Printf("Create a new trigger? (y/n): ")
+		line, err := editor.GetLine()
+		if err != nil {
+			return err
+		}
+
+		if line == "y" {
+		} else if line == "n" {
+			break
+		} else {
+			continue
+		}
+
+		trigger := model.Trigger{}
+
+		fmt.Printf("FieldName: ")
+		line, err = editor.GetLine()
+		if err != nil {
+			return err
+		}
+		trigger.FieldName = line
+
+		fmt.Printf("Target: ")
+		line, err = editor.GetLine()
+		if err != nil {
+			return err
+		}
+		trigger.Target = line
+
+	TriggerType:
+		for i, v := range model.TriggerTypes {
+			fmt.Printf("%d: %s\n", i, v)
+		}
+
+		fmt.Printf("TriggerType: ")
+		line, err = editor.GetLine()
+		if err != nil {
+			return err
+		}
+
+		selected, err := strconv.Atoi(line)
+		if err != nil {
+			fmt.Println(err)
+			goto TriggerType
+		}
+
+		if selected < 0 || selected > len(model.TriggerTypes)-1 {
+			fmt.Printf("Select between %d and %d\n", 0, len(model.TriggerTypes)-1)
+			goto TriggerType
+		}
+
+		trigger.TriggerType = model.TriggerType(selected)
+
+		triggers = append(triggers, trigger)
 	}
+	job.Triggers = triggers
 
 	return nil
 }
@@ -87,7 +144,7 @@ to quickly create a Cobra application.`,
 }
 
 func runNewCmd(resourceKey string) error {
-	editor := edit.NewEditor(os.Stdin)
+	editor = edit.NewEditor(os.Stdin)
 
 	resource, err := resourceByKey(resourceKey)
 	if err != nil {
