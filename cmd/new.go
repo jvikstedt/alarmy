@@ -45,9 +45,25 @@ var resources = map[string]Resource{
 			edit.Field{Name: "Spec", Kind: edit.String},
 			edit.Field{Name: "Cmd", Kind: edit.String},
 			edit.Field{Name: "Active", Kind: edit.Bool},
+			edit.Field{Name: "Triggers", FieldEditor: triggersEditor},
 		},
 		New: func() interface{} { return &model.Job{} },
 	},
+}
+
+func triggersEditor(object interface{}, field edit.Field) error {
+	job, ok := object.(*model.Job)
+	if !ok {
+		return fmt.Errorf("Not a *model.Job object")
+	}
+
+	// Temporaly use these
+	job.Triggers = []model.Trigger{
+		model.Trigger{FieldName: "status", Target: "200", TriggerType: model.TriggerEqual},
+		model.Trigger{FieldName: "duration", Target: "500", TriggerType: model.TriggerMoreThan},
+	}
+
+	return nil
 }
 
 // newCmd represents the new command
@@ -63,8 +79,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		err := runNewCmd(key)
-		if err != nil {
+		if err := runNewCmd(key); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -80,15 +95,12 @@ func runNewCmd(resourceKey string) error {
 	object := resource.New()
 
 	fmt.Printf("New resource %s\n", resourceKey)
-	for _, f := range resource.Fields {
-		err := edit.EditObjectField(object, f)
-		if err != nil {
-			return err
-		}
+
+	if err := edit.Edit(object, resource.Fields); err != nil {
+		return err
 	}
 
-	err = service.PostAsJSON(resource.Path, object)
-	if err != nil {
+	if err := service.PostAsJSON(resource.Path, object); err != nil {
 		return err
 	}
 

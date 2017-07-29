@@ -45,11 +45,6 @@ func (e *Executor) Execute(entryID schedule.EntryID) {
 		return
 	}
 
-	job.Triggers = []model.Trigger{
-		model.Trigger{FieldName: "status", Target: "200", TriggerType: model.TriggerEqual},
-		model.Trigger{FieldName: "duration", Target: "500", TriggerType: model.TriggerMoreThan},
-	}
-
 	for _, t := range job.Triggers {
 		field := result[t.FieldName]
 		switch v := field.(type) {

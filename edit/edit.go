@@ -18,10 +18,13 @@ const (
 	Bool
 )
 
+type FieldEditor func(interface{}, Field) error
+
 type Field struct {
 	Name string
 	Kind
 	Default interface{}
+	FieldEditor
 }
 
 func KindTranslation(kind Kind) string {
@@ -94,14 +97,29 @@ func EditObjectField(object interface{}, field Field) error {
 			return err
 		}
 
-		err = SetObjectField(object, field, text)
-		if err != nil {
+		if err := SetObjectField(object, field, text); err != nil {
 			fmt.Println(err)
 			continue
 		}
 
 		break
 	}
+	return nil
+}
+
+func Edit(object interface{}, fields []Field) error {
+	for _, f := range fields {
+		if f.FieldEditor != nil {
+			if err := f.FieldEditor(object, f); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := EditObjectField(object, f); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
