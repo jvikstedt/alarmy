@@ -87,6 +87,8 @@ to quickly create a Cobra application.`,
 }
 
 func runNewCmd(resourceKey string) error {
+	editor := edit.NewEditor(os.Stdin)
+
 	resource, err := resourceByKey(resourceKey)
 	if err != nil {
 		return err
@@ -96,7 +98,7 @@ func runNewCmd(resourceKey string) error {
 
 	fmt.Printf("New resource %s\n", resourceKey)
 
-	if err := edit.Edit(object, resource.Fields); err != nil {
+	if err := editor.Edit(object, resource.Fields); err != nil {
 		return err
 	}
 
