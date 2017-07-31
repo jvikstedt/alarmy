@@ -2,6 +2,7 @@ package alarm
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os/exec"
 	"strconv"
@@ -45,47 +46,48 @@ func (e *Executor) Execute(entryID schedule.EntryID) {
 		return
 	}
 
+	resultSet := TriggerResultSet{}
+
 	for _, t := range job.Triggers {
+		triggerResult := TriggerResult{}
+
 		field := result[t.FieldName]
 		switch v := field.(type) {
 		case float64:
 			// Check if integer
 			if v == float64(int64(v)) {
-				e.handleAsInt(job, t, v)
+				e.handleAsInt(job, t, v, &triggerResult)
 			}
 
 		case string:
 		case bool:
 		default:
-			e.logger.Printf("Unknown type %T for job %d\n", v, job.ID)
+			triggerResult.Err = fmt.Errorf("Unknown type %T for job %d\n", v, job.ID)
 		}
+
+		resultSet = append(resultSet, triggerResult)
 	}
 
 	e.logger.Printf("Job %d finished with output %s\n", job.ID, strings.TrimSpace(string(out)))
 }
 
-func (e *Executor) handleAsInt(job model.Job, t model.Trigger, value float64) bool {
+func (e *Executor) handleAsInt(job model.Job, t model.Trigger, value float64, triggerResult *TriggerResult) {
 	target, err := strconv.Atoi(t.Target)
 	if err != nil {
-		e.logger.Printf("%v", err)
-		return false
+		triggerResult.Err = err
 	}
 	actual := int(value)
 
 	switch t.TriggerType {
 	case model.TriggerEqual:
 		if target != actual {
-			e.logger.Printf("Expected %d but got %d for job %s.%s\n", target, actual, job.Name, t.FieldName)
-			return true
+			triggerResult.Err = fmt.Errorf("Expected %d but got %d for job %s.%s", target, actual, job.Name, t.FieldName)
 		}
 	case model.TriggerMoreThan:
 		if actual > target {
-			e.logger.Printf("TriggerMoreThan %d was more than %d for job %s.%s\n", actual, target, job.Name, t.FieldName)
-			return true
+			triggerResult.Err = fmt.Errorf("TriggerMoreThan %d was more than %d for job %s.%s", actual, target, job.Name, t.FieldName)
 		}
 	default:
-		e.logger.Printf("Invalid TriggerType %v for int type\n", t.TriggerType)
+		triggerResult.Err = fmt.Errorf("Unknown TriggerType")
 	}
-
-	return false
 }
