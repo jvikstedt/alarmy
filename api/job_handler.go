@@ -57,7 +57,8 @@ func (a *Api) JobCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job, err := a.store.Job().Create(data.Job)
+	job := data.Job
+	err = a.store.Job().Create(&job)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -122,7 +123,8 @@ func (a *Api) JobUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job, err := a.store.Job().Update(data.Job)
+	job := data.Job
+	err = a.store.Job().Update(&job)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}

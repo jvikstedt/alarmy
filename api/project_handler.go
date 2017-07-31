@@ -43,7 +43,8 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := a.store.Project().Create(data.Project)
+	project := data.Project
+	err = a.store.Project().Create(&project)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}
@@ -103,7 +104,8 @@ func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := a.store.Project().Update(data.Project)
+	project := data.Project
+	err = a.store.Project().Update(&project)
 	if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
 		return
 	}

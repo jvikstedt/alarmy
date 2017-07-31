@@ -1,29 +1,32 @@
 package store_test
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/jvikstedt/alarmy/store"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var stores = make(map[string]store.Store)
 var currentStore store.Store
 
 func TestMain(m *testing.M) {
-	boltStore, err := store.NewBoltStore("alarmy_test.db")
+	db, err := sql.Open("sqlite3", "test.db")
 	if err != nil {
 		panic(err)
 	}
-	defer boltStore.Close()
+	defer db.Close()
 
-	err = boltStore.RecreateAllTables()
+	sqlStore := store.NewSqlStore(db, "sqlite3")
+	err = sqlStore.SetupTables()
 	if err != nil {
 		panic(err)
 	}
 
-	stores["bolt"] = boltStore
+	stores["sql"] = sqlStore
 
 	var result int
 	for k, v := range stores {

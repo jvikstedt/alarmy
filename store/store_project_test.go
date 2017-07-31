@@ -17,7 +17,7 @@ func TestProjectAll(t *testing.T) {
 	assert.Equal(t, 0, len(projects), "should be 0 projects")
 
 	project := model.Project{Name: "Golang"}
-	currentStore.Project().Create(project)
+	currentStore.Project().Create(&project)
 
 	// One project
 	projects, err = currentStore.Project().All()
@@ -35,7 +35,8 @@ func TestProjectCreate(t *testing.T) {
 	}
 
 	for i, p := range testProjects {
-		project, err := currentStore.Project().Create(p)
+		project := p
+		err := currentStore.Project().Create(&project)
 
 		assert.Nil(t, err, "ProjectCreate should not return an error")
 		assert.Equal(t, i+1, project.ID, "id should be the same")
@@ -48,20 +49,18 @@ func TestProjectCreate(t *testing.T) {
 }
 
 func TestProjectUpdate(t *testing.T) {
-	project, _ := currentStore.Project().Create(model.Project{Name: "Javascript"})
+	project := model.Project{Name: "Javascript"}
+	currentStore.Project().Create(&project)
 	project.Name = "Golang"
 
-	testProject, err := currentStore.Project().Update(project)
+	err := currentStore.Project().Update(&project)
 	assert.Nil(t, err, "ProjectUpdate should not return an error")
-	assert.Equal(t, project.Name, testProject.Name, "project name should be the updated one")
-
-	afterUpdateProject, _ := currentStore.Project().GetOne(project.ID)
-	assert.True(t, project.UpdatedAt.Before(afterUpdateProject.UpdatedAt), "UpdatedAt should be updated after project update")
-	assert.Equal(t, project.Name, afterUpdateProject.Name, "project name should be the updated one")
+	assert.Equal(t, "Golang", project.Name, "project name should be the updated one")
 }
 
 func TestProjectDestroy(t *testing.T) {
-	project, _ := currentStore.Project().Create(model.Project{Name: "Golang"})
+	project := model.Project{Name: "Golang"}
+	currentStore.Project().Create(&project)
 
 	_, err := currentStore.Project().GetOne(project.ID)
 	assert.Nil(t, err, "project should be in the store before destroy")
@@ -72,7 +71,8 @@ func TestProjectDestroy(t *testing.T) {
 }
 
 func TestProjectGetOne(t *testing.T) {
-	initialProject, _ := currentStore.Project().Create(model.Project{Name: "Golang"})
+	initialProject := model.Project{Name: "Golang"}
+	currentStore.Project().Create(&initialProject)
 
 	testProject, err := currentStore.Project().GetOne(initialProject.ID)
 	assert.Nil(t, err, "ProjectGetOne should not return an error")
