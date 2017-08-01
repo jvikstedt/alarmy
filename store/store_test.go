@@ -14,7 +14,7 @@ var stores = make(map[string]store.Store)
 var currentStore store.Store
 
 func TestMain(m *testing.M) {
-	db, err := sql.Open("sqlite3", "test.db")
+	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		panic(err)
 	}
