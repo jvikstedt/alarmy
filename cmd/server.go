@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/jvikstedt/alarmy/api"
 	"github.com/jvikstedt/alarmy/schedule"
 	"github.com/jvikstedt/alarmy/store"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 )
 
@@ -49,12 +51,17 @@ func setupServer(addr string) error {
 		return err
 	}
 
-	// Store / Database Setup
-	boltStore, err := store.NewBoltStore(filepath.Join(rootDir, "alarmy.db"))
+	db, err := sql.Open("sqlite3", filepath.Join(rootDir, "alarmy.db"))
 	if err != nil {
 		return err
 	}
-	defer boltStore.Close()
+	defer db.Close()
+
+	sqlStore := store.NewSqlStore(db, "sqlite3")
+	err = sqlStore.SetupTables()
+	if err != nil {
+		return err
+	}
 
 	// Logger setup
 	f, err := os.OpenFile(filepath.Join(rootDir, "server.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -69,9 +76,9 @@ func setupServer(addr string) error {
 	go scheduler.Start()
 	defer scheduler.Stop()
 
-	executor := alarm.NewExecutor(boltStore, logger)
+	executor := alarm.NewExecutor(sqlStore, logger)
 
-	jobs, err := boltStore.Job().All()
+	jobs, err := sqlStore.Job().All()
 	if err != nil {
 		return err
 	}
@@ -82,7 +89,7 @@ func setupServer(addr string) error {
 	}
 
 	// Server & http.Handler setup
-	api := api.NewApi(boltStore, logger, scheduler, executor)
+	api := api.NewApi(sqlStore, logger, scheduler, executor)
 	handler, err := api.Handler()
 	if err != nil {
 		return err

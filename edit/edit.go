@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"reflect"
 	"strconv"
 	"strings"
@@ -18,10 +18,23 @@ const (
 	Bool
 )
 
+type FieldEditor func(interface{}, Field) error
+
 type Field struct {
 	Name string
 	Kind
 	Default interface{}
+	FieldEditor
+}
+
+type Editor struct {
+	reader *bufio.Reader
+}
+
+func NewEditor(reader io.Reader) Editor {
+	return Editor{
+		reader: bufio.NewReader(reader),
+	}
 }
 
 func KindTranslation(kind Kind) string {
@@ -86,22 +99,37 @@ func SetObjectField(object interface{}, field Field, value string) error {
 	return nil
 }
 
-func EditObjectField(object interface{}, field Field) error {
+func (e Editor) EditObjectField(object interface{}, field Field) error {
 	fmt.Printf("%s (%s): ", field.Name, KindTranslation(field.Kind))
 	for {
-		text, err := getLine()
+		text, err := e.GetLine()
 		if err != nil {
 			return err
 		}
 
-		err = SetObjectField(object, field, text)
-		if err != nil {
+		if err := SetObjectField(object, field, text); err != nil {
 			fmt.Println(err)
 			continue
 		}
 
 		break
 	}
+	return nil
+}
+
+func (e Editor) Edit(object interface{}, fields []Field) error {
+	for _, f := range fields {
+		if f.FieldEditor != nil {
+			if err := f.FieldEditor(object, f); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := e.EditObjectField(object, f); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -113,10 +141,8 @@ func ObjectPrettyFormat(object interface{}) (string, error) {
 	return string(data), nil
 }
 
-var reader = bufio.NewReader(os.Stdin)
-
-func getLine() (string, error) {
-	text, err := reader.ReadString('\n')
+func (e Editor) GetLine() (string, error) {
+	text, err := e.reader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}

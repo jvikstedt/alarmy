@@ -1,16 +1,19 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Job struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
-	ProjectID int       `json:"project_id"`
+	ProjectID int       `json:"project_id" db:"projectID"`
 	Spec      string    `json:"spec"`
 	Cmd       string    `json:"cmd"`
 	Active    bool      `json:"active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Triggers  []Trigger `json:"triggers"`
+	CreatedAt time.Time `json:"created_at" db:"createdAt"`
+	UpdatedAt time.Time `json:"updated_at" db:"updatedAt"`
 }
 
 func (j Job) Errors() map[string][]string {
@@ -25,4 +28,11 @@ func (j Job) Errors() map[string][]string {
 	}
 
 	return errors
+}
+
+type JobParams struct {
+	Job
+	OmitID        interface{} `json:"id,omitempty"`
+	OmitCreatedAt interface{} `json:"created_at,omitempty"`
+	OmitUpdatedAt interface{} `json:"updated_at,omitempty"`
 }

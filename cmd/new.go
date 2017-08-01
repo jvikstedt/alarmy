@@ -16,6 +16,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/jvikstedt/alarmy/edit"
 	"github.com/jvikstedt/alarmy/model"
@@ -45,9 +46,81 @@ var resources = map[string]Resource{
 			edit.Field{Name: "Spec", Kind: edit.String},
 			edit.Field{Name: "Cmd", Kind: edit.String},
 			edit.Field{Name: "Active", Kind: edit.Bool},
+			edit.Field{Name: "Triggers", FieldEditor: triggersEditor},
 		},
 		New: func() interface{} { return &model.Job{} },
 	},
+}
+
+var editor edit.Editor
+
+func triggersEditor(object interface{}, field edit.Field) error {
+	job, ok := object.(*model.Job)
+	if !ok {
+		return fmt.Errorf("Not a *model.Job object")
+	}
+
+	triggers := []model.Trigger{}
+
+	for {
+		fmt.Printf("Create a new trigger? (y/n): ")
+		line, err := editor.GetLine()
+		if err != nil {
+			return err
+		}
+
+		if line == "y" {
+		} else if line == "n" {
+			break
+		} else {
+			continue
+		}
+
+		trigger := model.Trigger{}
+
+		fmt.Printf("FieldName: ")
+		line, err = editor.GetLine()
+		if err != nil {
+			return err
+		}
+		trigger.FieldName = line
+
+		fmt.Printf("Target: ")
+		line, err = editor.GetLine()
+		if err != nil {
+			return err
+		}
+		trigger.Target = line
+
+	TriggerType:
+		for i, v := range model.TriggerTypes {
+			fmt.Printf("%d: %s\n", i, v)
+		}
+
+		fmt.Printf("TriggerType: ")
+		line, err = editor.GetLine()
+		if err != nil {
+			return err
+		}
+
+		selected, err := strconv.Atoi(line)
+		if err != nil {
+			fmt.Println(err)
+			goto TriggerType
+		}
+
+		if selected < 0 || selected > len(model.TriggerTypes)-1 {
+			fmt.Printf("Select between %d and %d\n", 0, len(model.TriggerTypes)-1)
+			goto TriggerType
+		}
+
+		trigger.TriggerType = model.TriggerType(selected)
+
+		triggers = append(triggers, trigger)
+	}
+	job.Triggers = triggers
+
+	return nil
 }
 
 // newCmd represents the new command
@@ -63,8 +136,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
 
-		err := runNewCmd(key)
-		if err != nil {
+		if err := runNewCmd(key); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -72,6 +144,8 @@ to quickly create a Cobra application.`,
 }
 
 func runNewCmd(resourceKey string) error {
+	editor = edit.NewEditor(os.Stdin)
+
 	resource, err := resourceByKey(resourceKey)
 	if err != nil {
 		return err
@@ -80,15 +154,12 @@ func runNewCmd(resourceKey string) error {
 	object := resource.New()
 
 	fmt.Printf("New resource %s\n", resourceKey)
-	for _, f := range resource.Fields {
-		err := edit.EditObjectField(object, f)
-		if err != nil {
-			return err
-		}
+
+	if err := editor.Edit(object, resource.Fields); err != nil {
+		return err
 	}
 
-	err = service.PostAsJSON(resource.Path, object)
-	if err != nil {
+	if err := service.PostAsJSON(resource.Path, object); err != nil {
 		return err
 	}
 

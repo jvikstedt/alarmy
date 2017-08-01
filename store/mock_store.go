@@ -37,15 +37,17 @@ func (s *ProjectMockStore) All() ([]model.Project, error) {
 	return s.Returns.Projects, s.Returns.Error
 }
 
-func (s *ProjectMockStore) Create(project model.Project) (model.Project, error) {
-	s.Receives.Project = project
-	return s.Returns.Project, s.Returns.Error
+func (s *ProjectMockStore) Create(project *model.Project) error {
+	s.Receives.Project = *project
+	*project = s.Returns.Project
+	return s.Returns.Error
 }
 
-func (s *ProjectMockStore) Update(project model.Project) (model.Project, error) {
+func (s *ProjectMockStore) Update(project *model.Project) error {
 	s.CallCount++
-	s.Receives.Project = project
-	return s.Returns.Project, s.Returns.Error
+	s.Receives.Project = *project
+	*project = s.Returns.Project
+	return s.Returns.Error
 }
 
 func (s *ProjectMockStore) Destroy(id int) error {
