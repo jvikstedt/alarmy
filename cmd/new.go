@@ -16,111 +16,38 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/jvikstedt/alarmy/edit"
 	"github.com/jvikstedt/alarmy/model"
-	"github.com/jvikstedt/alarmy/service"
 	"github.com/spf13/cobra"
 )
 
-type Resource struct {
-	Path   string
-	Fields []edit.Field
-	New    func() interface{}
-}
-
-var resources = map[string]Resource{
-	"project": Resource{
-		Path: "projects",
+var resources = map[string]edit.Resource{
+	"project": edit.Resource{
 		Fields: []edit.Field{
-			edit.Field{Name: "Name", Kind: edit.String},
+			edit.Field{Name: "Name"},
 		},
 		New: func() interface{} { return &model.Project{} },
 	},
-	"job": Resource{
-		Path: "jobs",
+	"job": edit.Resource{
 		Fields: []edit.Field{
-			edit.Field{Name: "Name", Kind: edit.String},
-			edit.Field{Name: "ProjectID", Kind: edit.Int},
-			edit.Field{Name: "Spec", Kind: edit.String},
-			edit.Field{Name: "Cmd", Kind: edit.String},
-			edit.Field{Name: "Active", Kind: edit.Bool},
-			edit.Field{Name: "Triggers", FieldEditor: triggersEditor},
+			edit.Field{Name: "Name"},
+			edit.Field{Name: "ProjectID"},
+			edit.Field{Name: "Spec"},
+			edit.Field{Name: "Cmd"},
+			edit.Field{Name: "Active"},
+			edit.Field{Name: "Triggers", Association: "trigger"},
 		},
 		New: func() interface{} { return &model.Job{} },
 	},
-}
-
-var editor edit.Editor
-
-func triggersEditor(object interface{}, field edit.Field) error {
-	job, ok := object.(*model.Job)
-	if !ok {
-		return fmt.Errorf("Not a *model.Job object")
-	}
-
-	triggers := []model.Trigger{}
-
-	for {
-		fmt.Printf("Create a new trigger? (y/n): ")
-		line, err := editor.GetLine()
-		if err != nil {
-			return err
-		}
-
-		if line == "y" {
-		} else if line == "n" {
-			break
-		} else {
-			continue
-		}
-
-		trigger := model.Trigger{}
-
-		fmt.Printf("FieldName: ")
-		line, err = editor.GetLine()
-		if err != nil {
-			return err
-		}
-		trigger.FieldName = line
-
-		fmt.Printf("Target: ")
-		line, err = editor.GetLine()
-		if err != nil {
-			return err
-		}
-		trigger.Target = line
-
-	TriggerType:
-		for i, v := range model.TriggerTypes {
-			fmt.Printf("%d: %s\n", i, v)
-		}
-
-		fmt.Printf("TriggerType: ")
-		line, err = editor.GetLine()
-		if err != nil {
-			return err
-		}
-
-		selected, err := strconv.Atoi(line)
-		if err != nil {
-			fmt.Println(err)
-			goto TriggerType
-		}
-
-		if selected < 0 || selected > len(model.TriggerTypes)-1 {
-			fmt.Printf("Select between %d and %d\n", 0, len(model.TriggerTypes)-1)
-			goto TriggerType
-		}
-
-		trigger.TriggerType = model.TriggerType(selected)
-
-		triggers = append(triggers, trigger)
-	}
-	job.Triggers = triggers
-
-	return nil
+	"trigger": edit.Resource{
+		Fields: []edit.Field{
+			edit.Field{Name: "FieldName"},
+			edit.Field{Name: "Target"},
+			edit.Field{Name: "TriggerType"},
+		},
+		New: func() interface{} { return &model.Trigger{} },
+	},
 }
 
 // newCmd represents the new command
@@ -144,42 +71,16 @@ to quickly create a Cobra application.`,
 }
 
 func runNewCmd(resourceKey string) error {
-	editor = edit.NewEditor(os.Stdin)
+	editor := edit.NewEditor(os.Stdin, os.Stdout, resources)
 
-	resource, err := resourceByKey(resourceKey)
+	object, err := editor.NewObject(resourceKey)
 	if err != nil {
 		return err
 	}
 
-	object := resource.New()
-
-	fmt.Printf("New resource %s\n", resourceKey)
-
-	if err := editor.Edit(object, resource.Fields); err != nil {
-		return err
-	}
-
-	if err := service.PostAsJSON(resource.Path, object); err != nil {
-		return err
-	}
-
-	pretty, err := edit.ObjectPrettyFormat(object)
-	if err != nil {
-		return err
-	}
-	fmt.Println(pretty)
+	fmt.Println(object)
 
 	return nil
-}
-
-func resourceByKey(key string) (Resource, error) {
-	resource, ok := resources[key]
-
-	if !ok {
-		return Resource{}, fmt.Errorf("object %s not found", key)
-	}
-
-	return resource, nil
 }
 
 func init() {

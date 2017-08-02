@@ -2,7 +2,6 @@ package edit
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -10,138 +9,157 @@ import (
 	"strings"
 )
 
-type Kind uint
-
-const (
-	String Kind = iota
-	Int
-	Bool
-)
-
-type FieldEditor func(interface{}, Field) error
-
+// Field is one of the Object fields
 type Field struct {
-	Name string
-	Kind
-	Default interface{}
-	FieldEditor
+	Name        string
+	Association string
+	Default     interface{}
+}
+
+// Resource is a instruction for the editor
+// New is a function that tells how to make a new Resource
+type Resource struct {
+	Fields []Field
+	New    func() interface{}
 }
 
 type Editor struct {
-	reader *bufio.Reader
+	reader    *bufio.Reader
+	writer    io.Writer
+	resources map[string]Resource
 }
 
-func NewEditor(reader io.Reader) Editor {
-	return Editor{
-		reader: bufio.NewReader(reader),
-	}
-}
-
-func KindTranslation(kind Kind) string {
-	switch kind {
-	case String:
-		return "String"
-	case Int:
-		return "Integer"
-	case Bool:
-		return "Boolean"
-	default:
-		return "Unknown Type"
+func NewEditor(reader io.Reader, writer io.Writer, resources map[string]Resource) *Editor {
+	return &Editor{
+		reader:    bufio.NewReader(reader),
+		writer:    writer,
+		resources: resources,
 	}
 }
 
-func DefaultValueFor(field Field) (interface{}, error) {
-	if field.Default != nil {
-		return field.Default, nil
+func (e *Editor) NewObject(name string) (interface{}, error) {
+	// Get Resource
+	r, ok := e.resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Could not find resource by name %s", name)
 	}
-	switch field.Kind {
-	case String:
-		return "", nil
-	case Int:
-		return 0, nil
-	case Bool:
-		return false, nil
-	default:
-		return nil, fmt.Errorf("Could not find default value for %v", field.Kind)
+
+	// Create a new object
+	object := r.New()
+
+	// Loop fields
+	for _, f := range r.Fields {
+		if err := e.handleField(object, f); err != nil {
+			return nil, err
+		}
 	}
+
+	return object, nil
 }
 
-func ConvertValueType(value string, field Field) (interface{}, error) {
-	if value == "" {
-		return DefaultValueFor(field)
+func (e *Editor) UpdateObject(object interface{}, name string) error {
+	// Get Resource
+	r, ok := e.resources[name]
+	if !ok {
+		return fmt.Errorf("Could not find resource by name %s", name)
 	}
 
-	switch field.Kind {
-	case String:
-		return value, nil
-	case Int:
-		return strconv.Atoi(value)
-	case Bool:
-		return strconv.ParseBool(value)
-	default:
-		return nil, fmt.Errorf("Could not convert string to kind %v", field.Kind)
+	// Loop fields
+	for _, f := range r.Fields {
+		if err := e.handleField(object, f); err != nil {
+			return err
+		}
 	}
-}
-
-func SetObjectField(object interface{}, field Field, value string) error {
-	objectVal := reflect.ValueOf(object).Elem()
-	fieldVal := objectVal.FieldByName(field.Name)
-
-	converted, err := ConvertValueType(value, field)
-	if err != nil {
-		return err
-	}
-
-	convertedVal := reflect.ValueOf(converted)
-
-	fieldVal.Set(convertedVal)
-
 	return nil
 }
 
-func (e Editor) EditObjectField(object interface{}, field Field) error {
-	fmt.Printf("%s (%s): ", field.Name, KindTranslation(field.Kind))
-	for {
-		text, err := e.GetLine()
+func (e *Editor) handleField(object interface{}, field Field) error {
+	objectVal := reflect.ValueOf(object).Elem()
+	fieldVal := objectVal.FieldByName(field.Name)
+	kind := fieldVal.Kind()
+
+	if kind == reflect.Slice {
+		kind = reflect.TypeOf(fieldVal.Interface()).Elem().Kind()
+		for {
+			vi, blank, err := e.something(field, kind)
+			if err != nil {
+				return err
+			}
+
+			var value reflect.Value
+			if blank {
+				value = reflect.Zero(fieldVal.Type())
+			}
+			value = reflect.ValueOf(vi)
+			fieldVal.Set(reflect.Append(fieldVal, value))
+
+			return nil
+		}
+	} else {
+		vi, blank, err := e.something(field, kind)
 		if err != nil {
 			return err
 		}
 
-		if err := SetObjectField(object, field, text); err != nil {
-			fmt.Println(err)
-			continue
+		var value reflect.Value
+		if blank {
+			value = reflect.Zero(fieldVal.Type())
+		} else {
+			value = reflect.ValueOf(vi)
 		}
-
-		break
-	}
-	return nil
-}
-
-func (e Editor) Edit(object interface{}, fields []Field) error {
-	for _, f := range fields {
-		if f.FieldEditor != nil {
-			if err := f.FieldEditor(object, f); err != nil {
-				return err
-			}
-			continue
-		}
-		if err := e.EditObjectField(object, f); err != nil {
-			return err
-		}
+		fieldVal.Set(value)
 	}
 
 	return nil
 }
 
-func ObjectPrettyFormat(object interface{}) (string, error) {
-	data, err := json.MarshalIndent(object, "", "    ")
-	if err != nil {
-		return "", err
+func (e *Editor) something(field Field, kind reflect.Kind) (interface{}, bool, error) {
+	if kind == reflect.Struct {
+		v, err := e.NewObject(field.Association)
+		objectVal := reflect.ValueOf(v).Elem().Interface()
+		return objectVal, false, err
 	}
-	return string(data), nil
+
+	return e.askAndConvert(field, kind)
 }
 
-func (e Editor) GetLine() (string, error) {
+func (e *Editor) askAndConvert(field Field, kind reflect.Kind) (interface{}, bool, error) {
+	for {
+		e.writef("%s (%s): ", field.Name, kind)
+		text, err := e.getLine()
+		if err != nil {
+			return nil, false, err
+		}
+
+		if text == "" {
+			return nil, true, nil
+		}
+		converted, err := e.convertValueType(text, kind)
+		if err != nil {
+			continue
+		}
+		return converted, false, nil
+	}
+}
+
+func (e *Editor) convertValueType(value string, kind reflect.Kind) (interface{}, error) {
+	switch kind {
+	case reflect.String:
+		return value, nil
+	case reflect.Int:
+		return strconv.Atoi(value)
+	case reflect.Bool:
+		return strconv.ParseBool(value)
+	default:
+		return nil, fmt.Errorf("Could not convert string to kind %s", kind)
+	}
+}
+
+func (e *Editor) writef(format string, a ...interface{}) {
+	fmt.Fprintf(e.writer, format, a...)
+}
+
+func (e *Editor) getLine() (string, error) {
 	text, err := e.reader.ReadString('\n')
 	if err != nil {
 		return "", err
