@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jvikstedt/alarmy/edit"
 	"github.com/jvikstedt/alarmy/model"
+	edit "github.com/jvikstedt/blueditor"
 	"github.com/spf13/cobra"
 )
 
