@@ -1,19 +1,18 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
 type Job struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	ProjectID int       `json:"project_id" db:"projectID"`
-	Spec      string    `json:"spec"`
-	Cmd       string    `json:"cmd"`
-	Active    bool      `json:"active"`
-	Triggers  []Trigger `json:"triggers"`
-	CreatedAt time.Time `json:"created_at" db:"createdAt"`
-	UpdatedAt time.Time `json:"updated_at" db:"updatedAt"`
+	ID        uint       `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	Name      string     `json:"name"`
+	Project   Project    `json:"project"`
+	ProjectID int        `json:"project_id"`
+	Spec      string     `json:"spec"`
+	Cmd       string     `json:"cmd"`
+	Active    bool       `json:"active"`
 }
 
 func (j Job) Errors() map[string][]string {

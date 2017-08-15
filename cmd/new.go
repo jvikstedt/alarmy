@@ -17,8 +17,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jvikstedt/alarmy/model"
-	edit "github.com/jvikstedt/blueditor"
+	edit "github.com/jvikstedt/alarmy/editor"
+	"github.com/jvikstedt/alarmy/internal/model"
+	"github.com/jvikstedt/alarmy/internal/service"
 	"github.com/spf13/cobra"
 )
 
@@ -42,9 +43,10 @@ var resources = map[string]edit.Resource{
 	},
 	"trigger": edit.Resource{
 		Fields: []edit.Field{
-			edit.Field{Name: "FieldName"},
+			edit.Field{Name: "JobID"},
 			edit.Field{Name: "Target"},
-			edit.Field{Name: "TriggerType"},
+			edit.Field{Name: "Val"},
+			edit.Field{Name: "Type"},
 		},
 		New: func() interface{} { return &model.Trigger{} },
 	},
@@ -82,9 +84,7 @@ func runNewCmd(resourceKey string) error {
 		return err
 	}
 
-	fmt.Println(object)
-
-	return nil
+	return service.PostAsJSON(resourceKey+"s", object)
 }
 
 func init() {

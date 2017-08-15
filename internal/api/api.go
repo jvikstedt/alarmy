@@ -9,21 +9,23 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/jvikstedt/alarmy/alarm"
+	"github.com/go-chi/render"
+	"github.com/jvikstedt/alarmy/internal"
+	"github.com/jvikstedt/alarmy/internal/model"
+	"github.com/jvikstedt/alarmy/internal/store"
 	"github.com/jvikstedt/alarmy/schedule"
-	"github.com/jvikstedt/alarmy/store"
 )
 
 type Api struct {
-	store     store.Store
+	str       store.Store
 	logger    *log.Logger
 	scheduler schedule.Scheduler
-	executor  *alarm.Executor
+	executor  *internal.Executor
 }
 
-func NewApi(store store.Store, logger *log.Logger, scheduler schedule.Scheduler, executor *alarm.Executor) *Api {
+func NewApi(str store.Store, logger *log.Logger, scheduler schedule.Scheduler, executor *internal.Executor) *Api {
 	return &Api{
-		store:     store,
+		str:       str,
 		logger:    logger,
 		scheduler: scheduler,
 		executor:  executor,
@@ -60,6 +62,16 @@ func (a *Api) Handler() (http.Handler, error) {
 		})
 	})
 
+	r.Route("/triggers", func(r chi.Router) {
+		r.Get("/", a.TriggerAll)
+		r.Post("/", a.TriggerCreate)
+		r.Route("/{triggerID}", func(r chi.Router) {
+			r.Get("/", a.TriggerGetOne)
+			r.Delete("/", a.TriggerDestroy)
+			r.Patch("/", a.TriggerUpdate)
+		})
+	})
+
 	return r, nil
 }
 
@@ -87,4 +99,23 @@ func (a *Api) CheckErr(w http.ResponseWriter, r *http.Request, err error, status
 		return true
 	}
 	return false
+}
+
+type Response model.Response
+
+func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPStatusCode)
+	return nil
+}
+
+func NewResponse(status int, data interface{}, errors []model.Error) *Response {
+	if errors == nil {
+		errors = []model.Error{}
+	}
+	return &Response{
+		HTTPStatusCode: status,
+		Data:           data,
+		HasErrors:      len(errors) > 0,
+		Errors:         errors,
+	}
 }

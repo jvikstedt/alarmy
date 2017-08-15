@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,11 +11,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jvikstedt/alarmy/alarm"
-	"github.com/jvikstedt/alarmy/api"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/jvikstedt/alarmy/internal"
+	"github.com/jvikstedt/alarmy/internal/api"
+	"github.com/jvikstedt/alarmy/internal/model"
+	"github.com/jvikstedt/alarmy/internal/store"
 	"github.com/jvikstedt/alarmy/schedule"
-	"github.com/jvikstedt/alarmy/store"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 )
 
@@ -51,17 +52,19 @@ func setupServer(addr string) error {
 		return err
 	}
 
-	db, err := sql.Open("sqlite3", filepath.Join(rootDir, "alarmy.db"))
+	db, err := gorm.Open("sqlite3", filepath.Join(rootDir, "alarmy.db"))
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	sqlStore := store.NewSqlStore(db, "sqlite3")
-	err = sqlStore.SetupTables()
-	if err != nil {
-		return err
-	}
+	db.AutoMigrate(
+		&model.Project{},
+		&model.Job{},
+		&model.Trigger{},
+	)
+
+	store := store.NewGormStore(db)
 
 	// Logger setup
 	f, err := os.OpenFile(filepath.Join(rootDir, "server.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -76,20 +79,20 @@ func setupServer(addr string) error {
 	go scheduler.Start()
 	defer scheduler.Stop()
 
-	executor := alarm.NewExecutor(sqlStore, logger)
+	executor := internal.NewExecutor(db, logger)
 
-	jobs, err := sqlStore.Job().All()
-	if err != nil {
-		return err
-	}
-	for _, j := range jobs {
-		if j.Active {
-			scheduler.AddEntry(schedule.EntryID(j.ID), j.Spec, executor.Execute)
-		}
-	}
+	//jobs, err := sqlStore.Job().All()
+	//if err != nil {
+	//	return err
+	//}
+	//for _, j := range jobs {
+	//	if j.Active {
+	//		scheduler.AddEntry(schedule.EntryID(j.ID), j.Spec, executor.Execute)
+	//	}
+	//}
 
 	// Server & http.Handler setup
-	api := api.NewApi(sqlStore, logger, scheduler, executor)
+	api := api.NewApi(store, logger, scheduler, executor)
 	handler, err := api.Handler()
 	if err != nil {
 		return err
