@@ -12,6 +12,7 @@ type ProjectRequest struct {
 	ProtectedID   interface{} `json:"id,omitempty"`
 	OmitCreatedAt interface{} `json:"created_at,omitempty"`
 	OmitUpdatedAt interface{} `json:"updated_at,omitempty"`
+	OmitDeletedAt interface{} `json:"deleted_at,omitempty"`
 }
 
 func (p *ProjectRequest) Bind(r *http.Request) error {
@@ -20,7 +21,7 @@ func (p *ProjectRequest) Bind(r *http.Request) error {
 
 // ProjectAll handler for getting all projects
 func (a *Api) ProjectAll(w http.ResponseWriter, r *http.Request) {
-	projects := []*model.Project{}
+	projects := []model.Project{}
 	if err := a.str.Project().GetAll(&projects); err != nil {
 		a.Printf(r.Context(), "%v", err)
 		render.Render(w, r, NewResponse(http.StatusInternalServerError, nil, nil))
@@ -45,68 +46,103 @@ func (a *Api) ProjectCreate(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, NewResponse(http.StatusUnprocessableEntity, nil, errors))
 		return
 	}
-	a.str.Project().Create(project)
+	err := a.str.Project().Create(project)
+	if err != nil {
+		render.Render(w, r, NewResponse(http.StatusInternalServerError, nil, nil))
+		return
+	}
 
 	render.Render(w, r, NewResponse(http.StatusCreated, project, nil))
 }
 
 // ProjectGetOne handler to get single project by id
 func (a *Api) ProjectGetOne(w http.ResponseWriter, r *http.Request) {
-	//projectID, err := a.URLParamInt(r, "projectID")
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
+	projectID, err := a.URLParamInt(r, "projectID")
+	if err != nil {
+		errors := []model.Error{
+			model.Error{Type: "parse_error", Name: "projectID", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusBadRequest, nil, errors))
+		return
+	}
 
-	//project, err := a.store.Project().GetOne(projectID)
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
+	project := model.Project{ID: uint(projectID)}
+	err = a.str.Project().Find(&project)
+	if err != nil {
+		errors := []model.Error{
+			model.Error{Type: "store_error", Name: "project", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusNotFound, nil, errors))
+		return
+	}
 
-	//render.Status(r, http.StatusOK)
-	//render.JSON(w, r, project)
+	render.Render(w, r, NewResponse(http.StatusOK, project, nil))
 }
 
 // ProjectDestroy delete a single project by id
 func (a *Api) ProjectDestroy(w http.ResponseWriter, r *http.Request) {
-	//projectID, err := a.URLParamInt(r, "projectID")
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
+	projectID, err := a.URLParamInt(r, "projectID")
+	if err != nil {
+		errors := []model.Error{
+			model.Error{Type: "parse_error", Name: "projectID", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusBadRequest, nil, errors))
+		return
+	}
 
-	//err = a.store.Project().Destroy(projectID)
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
+	project := model.Project{ID: uint(projectID)}
+	err = a.str.Project().Delete(&project)
+	if err != nil {
+		errors := []model.Error{
+			model.Error{Type: "store_error", Name: "project", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusNotFound, nil, errors))
+		return
+	}
 
-	//render.Status(r, http.StatusOK)
+	render.Render(w, r, NewResponse(http.StatusOK, project, nil))
 }
 
 // ProjectUpdate update a project by id
 func (a *Api) ProjectUpdate(w http.ResponseWriter, r *http.Request) {
-	//projectID, err := a.URLParamInt(r, "projectID")
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
+	projectID, err := a.URLParamInt(r, "projectID")
+	if err != nil {
+		errors := []model.Error{
+			model.Error{Type: "parse_error", Name: "projectID", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusBadRequest, nil, errors))
+		return
+	}
 
-	//data := &ProjectRequest{}
-	//err = render.Bind(r, data)
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
-	//data.Project.ID = projectID
+	project := model.Project{ID: uint(projectID)}
+	err = a.str.Project().Find(&project)
+	if err != nil {
+		errors := []model.Error{
+			model.Error{Type: "store_error", Name: "project", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusNotFound, nil, errors))
+		return
+	}
 
-	//if errors := data.Project.Errors(); len(errors) > 0 {
-	//	a.HandleError(w, r, errors, http.StatusUnprocessableEntity)
-	//	render.JSON(w, r, errors)
-	//	return
-	//}
+	data := &ProjectRequest{}
+	data.Project = &project
+	if err := render.Bind(r, data); err != nil {
+		errors := []model.Error{
+			model.Error{Type: "invalid_input", Name: "project", Reason: err.Error()},
+		}
+		render.Render(w, r, NewResponse(http.StatusBadRequest, nil, errors))
+		return
+	}
 
-	//project := data.Project
-	//err = a.store.Project().Update(&project)
-	//if stop := a.CheckErr(w, r, err, http.StatusInternalServerError); stop {
-	//	return
-	//}
+	if errors := project.Errors(); len(errors) > 0 {
+		render.Render(w, r, NewResponse(http.StatusUnprocessableEntity, nil, errors))
+		return
+	}
+	err = a.str.Project().Update(&project)
+	if err != nil {
+		render.Render(w, r, NewResponse(http.StatusInternalServerError, nil, nil))
+		return
+	}
 
-	//render.Status(r, http.StatusOK)
-	//render.JSON(w, r, project)
+	render.Render(w, r, NewResponse(http.StatusOK, project, nil))
 }

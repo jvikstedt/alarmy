@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func IsIncrementedBy(t *testing.T, message string, amount int, count func() (int, error), callback func()) {
+func IsChangedByAmount(t *testing.T, message string, amount int, count func() (int, error), callback func()) {
 	before, err := count()
 	if err != nil {
 		t.Fatal(err)
